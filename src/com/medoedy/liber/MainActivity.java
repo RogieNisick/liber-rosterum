@@ -243,6 +243,7 @@ public class MainActivity extends Activity {
         if (oldAi.isDirectory()) { File[] fs = oldAi.listFiles(); if (fs != null) for (File x : fs) x.delete(); oldAi.delete(); }
         Sfx.on = prefs.getBoolean("sound", true);
         Voice.on = prefs.getBoolean("voice", true);
+        Voice.ru = prefs.getBoolean("voice_ru", true);
         Ui.hapticsOn = prefs.getBoolean("haptics", true);
         Sfx.init(this);
         Voice.init(this);
@@ -722,12 +723,15 @@ public class MainActivity extends Activity {
             public void run() { Sfx.on = !Sfx.on; setPref("sound", Sfx.on); Sfx.play("bell"); fillSettings(body, t, after); }
         });
         toggleItem(body, t, "Голос глашатая", "Название легиона и девиз при выборе", Voice.on, new Runnable() {
-            public void run() { Voice.on = !Voice.on; setPref("voice", Voice.on); if (Voice.on) Voice.say("The herald stands ready."); fillSettings(body, t, after); }
+            public void run() { Voice.on = !Voice.on; setPref("voice", Voice.on); if (Voice.on) Voice.say(Voice.line("Глашатай готов.", "The herald stands ready.")); fillSettings(body, t, after); }
+        });
+        toggleItem(body, t, "Глашатай говорит по-русски", "Выключите, чтобы слышать английскую речь", Voice.ru, new Runnable() {
+            public void run() { Voice.ru = !Voice.ru; setPref("voice_ru", Voice.ru); Voice.setLang(); if (Voice.on) Voice.say(Voice.line("Глашатай говорит по-русски.", "The herald speaks English.")); fillSettings(body, t, after); }
         });
         sheetItem(body, "psyker", "Проверить голос", Voice.status, t, false, new View.OnClickListener() {
             public void onClick(View v) {
                 if (!Voice.on) { toast("Включите «Голос глашатая»"); return; }
-                Voice.say("The Sixteenth Legion. Sons of Horus. Where the Warmaster leads, we follow.");
+                Voice.say(Voice.proclamation("Sons of Horus"));
                 if (!Voice.working()) toast(Voice.status);
                 else toast("Если не слышно — прибавьте громкость мультимедиа");
             }

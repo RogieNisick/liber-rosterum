@@ -483,7 +483,7 @@ final class BattleScreen extends Screen {
         Sfx.play("fanfare");
         a.h.postDelayed(new Runnable() { public void run() { Sfx.play("choir", 0.7f, 1f); } }, 600);
         Ui.haptic(Ui.HEAVY);
-        Voice.say(w < 0 ? "The battle ends in a stalemate." : "Victory belongs to " + b.names[w] + ".");
+        Voice.say(w < 0 ? Voice.line("Битва завершилась ничьей.", "The battle ends in a stalemate.") : Voice.line("Победа за " + b.names[w] + ".", "Victory belongs to " + b.names[w] + "."));
     }
 
     void diceSheet() {

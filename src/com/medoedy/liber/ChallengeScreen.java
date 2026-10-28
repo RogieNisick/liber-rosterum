@@ -52,7 +52,10 @@ final class ChallengeScreen extends Screen {
     final int[] guardNext = {0, 0}, guardMiss = {0, 0}, flurry = {0, 0};
     final String[] focusText = {"", ""};
     String forbidden; // гамбит, запрещённый через Feint and Riposte
-    boolean secret = false, revealed;
+    boolean secret = true, revealed;
+    /** Ручной ввод кубов фокуса: выпавшие значения (0 — не введено) и признак «фокус уже определён». */
+    final int[] man1 = {0, 0}, man2 = {0, 0};
+    final boolean[] focusSet = {false, false};
     int step = 0; // 0 бойцы, 1 гамбиты, 2 фокус, 3 удары, 4 слава
     int round = 1;
     int challenger = 0;
@@ -226,7 +229,7 @@ final class ChallengeScreen extends Screen {
             }), Ui.lpm(-1, dp(46), 0, dp(3), 0, dp(3)));
         }
         next(act, "Вызов принят → гамбиты", fighter[0] != null && fighter[1] != null, new Runnable() {
-            public void run() { step = 1; Sfx.play("gong", 0.7f, 1f); Voice.say("Challenge accepted."); rebuild(); }
+            public void run() { step = 1; Sfx.play("gong", 0.7f, 1f); Voice.say(Voice.line("Вызов принят.", "Challenge accepted.")); rebuild(); }
         });
     }
 
@@ -558,6 +561,7 @@ final class ChallengeScreen extends Screen {
             TextView at = Ui.text(a, auto.toString(), 12, Theme.bodyBold, Ui.BONE_DIM);
             at.setPadding(0, dp(4), 0, 0);
             box.addView(at);
+            manualRows(box, p, dm, t);
             if (!focusText[p].isEmpty()) {
                 TextView ft = Ui.text(a, focusText[p], 14, Theme.bodyBold, advantage == p ? Ui.GREEN_OK : Ui.BONE);
                 ft.setPadding(0, dp(4), 0, 0);
@@ -568,15 +572,19 @@ final class ChallengeScreen extends Screen {
             public void onClick(View v) {
                 Sfx.play("dice");
                 Ui.pulses(new int[]{0, 90, 180}, new int[]{Ui.TICK, Ui.TICK, Ui.HEAVY});
+                // при ничьей перебрасываем обоих; иначе бросаем только тех, чей фокус ещё не определён (введён вручную)
+                boolean reroll = focusSet[0] && focusSet[1] && focus[0] == focus[1];
                 for (int p = 0; p < 2; p++) {
+                    if (focusSet[p] && !reroll) continue;
                     int d1 = rnd.nextInt(6) + 1, d2 = rnd.nextInt(6) + 1, dm = diceMode(p);
                     int keep = dm == 2 ? Math.max(d1, d2) : dm == -2 ? Math.min(d1, d2) : d1;
                     int bonus = focusBonus(p);
                     focus[p] = keep + bonus;
                     focusText[p] = "🎲 " + (dm == 1 ? String.valueOf(d1) : d1 + " и " + d2 + " → " + keep) + " " + (bonus >= 0 ? "+ " : "− ") + Math.abs(bonus) + " = " + focus[p];
+                    focusSet[p] = true;
+                    man1[p] = man2[p] = 0;
                 }
-                if (focus[0] == focus[1]) { advantage = -1; a.toast("Ничья: " + focus[0] + " — перебросьте"); }
-                else { advantage = focus[0] > focus[1] ? 0 : 1; Sfx.play("gong", 0.6f, 1.2f); }
+                settleFocus(true);
                 rebuild();
             }
         }), Ui.lpm(-1, dp(52), 0, dp(10), 0, dp(4)));
@@ -590,6 +598,53 @@ final class ChallengeScreen extends Screen {
     }
 
     // ================================================================ шаг 4: удары
+    /** Ряды кнопок 1–6 для ручного ввода выпавших кубов (без броска). */
+    void manualRows(LinearLayout box, final int p, final int dm, Theme t) {
+        TextView hd = Ui.text(a, "Или впишите выпавшие кубы:", 12, Theme.bodyBold, Ui.BONE_DIM);
+        hd.setPadding(0, dp(6), 0, 0);
+        box.addView(hd);
+        int dice = dm == 1 ? 1 : 2;
+        for (int d = 0; d < dice; d++) {
+            final int die = d;
+            LinearLayout row = new LinearLayout(a);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            int cur = d == 0 ? man1[p] : man2[p];
+            for (int v = 1; v <= 6; v++) {
+                final int val = v;
+                boolean sel = cur == v;
+                View btn = Ui.button(a, (dice == 2 ? (d + 1) + ": " : "") + v, sel ? Ui.brass(dp(6)) : Ui.steelButton(t, dp(6)),
+                        sel ? 0xFF1A140C : Ui.BONE, 15, new View.OnClickListener() {
+                    public void onClick(View vv) { enterDie(p, die, val); }
+                });
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(40), 1f);
+                lp.setMargins(dp(2), dp(4), dp(2), 0);
+                row.addView(btn, lp);
+            }
+            box.addView(row);
+        }
+    }
+
+    /** Записать выпавший куб вручную; как только кубы введены — фокус определён. */
+    void enterDie(int p, int die, int val) {
+        if (die == 0) man1[p] = val; else man2[p] = val;
+        int dm = diceMode(p);
+        if (man1[p] == 0 || (dm != 1 && man2[p] == 0)) { rebuild(); return; }
+        int keep = dm == 2 ? Math.max(man1[p], man2[p]) : dm == -2 ? Math.min(man1[p], man2[p]) : man1[p];
+        int bonus = focusBonus(p);
+        focus[p] = keep + bonus;
+        focusText[p] = "✎ " + (dm == 1 ? String.valueOf(man1[p]) : man1[p] + " и " + man2[p] + " → " + keep) + " " + (bonus >= 0 ? "+ " : "− ") + Math.abs(bonus) + " = " + focus[p];
+        focusSet[p] = true;
+        settleFocus(false);
+        rebuild();
+    }
+
+    /** Итог фокуса: если оба определены — выбрать Преимущество или перебросить при ничьей. */
+    void settleFocus(boolean rolled) {
+        if (!focusSet[0] || !focusSet[1]) { advantage = -1; return; }
+        if (focus[0] == focus[1]) { advantage = -1; a.toast("Ничья: " + focus[0] + " — перебросьте или впишите заново"); }
+        else { advantage = focus[0] > focus[1] ? 0 : 1; Sfx.play("gong", 0.6f, 1.2f); }
+    }
+
     void stepStrike(LinearLayout act) {
         int f = advantage < 0 ? 0 : advantage;
         TextView hd = Ui.text(a, "Первым бьёт " + b.names[f] + " (Преимущество), затем " + b.names[1 - f] + ", если его боец ещё стоит.", 14, Theme.bodyBold, Ui.BONE);
@@ -693,6 +748,8 @@ final class ChallengeScreen extends Screen {
         revealed = false;
         focus[0] = focus[1] = 0;
         focusText[0] = focusText[1] = "";
+        focusSet[0] = focusSet[1] = false;
+        man1[0] = man1[1] = man2[0] = man2[1] = 0;
         for (int p = 0; p < 2; p++) { guardNext[p] = guardMiss[p]; guardMiss[p] = 0; }
         advantage = -1;
         step = 1;

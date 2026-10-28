@@ -26,6 +26,8 @@ final class Voice {
     private static boolean ready, failed;
     private static String pending;
     static boolean on = true;
+    /** true — глашатай говорит по-русски (фразы переведены), false — по-английски. */
+    static boolean ru = true;
     static String status = "Запуск синтеза речи…";
     static String voiceName = "";
     private static File cacheDir;
@@ -48,14 +50,7 @@ final class Voice {
                     status = "На телефоне не найден синтез речи. Установите «Google Синтез речи» в Play Маркете.";
                     return;
                 }
-                int r = tts.setLanguage(Locale.UK);
-                if (r < 0) r = tts.setLanguage(Locale.US);
-                if (r < 0) r = tts.setLanguage(Locale.ENGLISH);
-                if (r < 0) {
-                    tts.setLanguage(Locale.getDefault());
-                    status = "Английский голос не установлен — говорит голос по умолчанию.";
-                } else status = "Глашатай готов";
-                pickMale();
+                setLang();
                 try {
                     tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
                             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
@@ -73,18 +68,39 @@ final class Voice {
         });
     }
 
-    /** Выбрать мужской английский голос. */
+    /** Выставить язык синтеза по настройке «ru» и подобрать мужской голос. */
+    static void setLang() {
+        if (tts == null) return;
+        int r;
+        if (ru) {
+            r = tts.setLanguage(new Locale("ru", "RU"));
+            status = r < 0 ? "Русский голос не установлен — добавьте русский синтез речи в «Google Синтез речи»." : "Глашатай готов";
+        } else {
+            r = tts.setLanguage(Locale.UK);
+            if (r < 0) r = tts.setLanguage(Locale.US);
+            if (r < 0) r = tts.setLanguage(Locale.ENGLISH);
+            status = r < 0 ? "Английский голос не установлен — говорит голос по умолчанию." : "Глашатай готов";
+        }
+        pickMale();
+    }
+
+    /** Текст для глашатая: русский или английский в зависимости от настройки. */
+    static String line(String russian, String english) { return ru ? russian : english; }
+
+    /** Выбрать мужской голос нужного языка. */
     private static void pickMale() {
         try {
             Set<android.speech.tts.Voice> vs = tts.getVoices();
             if (vs == null) return;
+            String lang = ru ? "ru" : "en";
             android.speech.tts.Voice best = null;
             int bestScore = -1;
             for (android.speech.tts.Voice v : vs) {
                 String n = v.getName().toLowerCase();
-                if (v.getLocale() == null || !"en".equals(v.getLocale().getLanguage())) continue;
+                if (v.getLocale() == null || !lang.equals(v.getLocale().getLanguage())) continue;
                 int sc = 0;
-                for (int i = 0; i < MALE.length; i++) if (n.startsWith(MALE[i])) { sc = 100 - i * 3; break; }
+                if (ru) sc = 40;
+                else for (int i = 0; i < MALE.length; i++) if (n.startsWith(MALE[i])) { sc = 100 - i * 3; break; }
                 if (n.contains("male") && !n.contains("female")) sc = Math.max(sc, 90);
                 if (n.contains("female")) sc = -1;
                 if (sc <= 0) continue;
@@ -93,7 +109,8 @@ final class Voice {
                 if (sc > bestScore) { bestScore = sc; best = v; }
             }
             if (best != null) { tts.setVoice(best); voiceName = best.getName(); status = "Глашатай готов: " + voiceName; }
-            else status = "Мужской голос не найден — в «Google Синтез речи» скачайте английский голос (Великобритания).";
+            else status = ru ? "Мужской русский голос не найден — в «Google Синтез речи» скачайте русский голос."
+                             : "Мужской голос не найден — в «Google Синтез речи» скачайте английский голос (Великобритания).";
         } catch (Throwable ignored) { }
     }
 
@@ -270,6 +287,44 @@ final class Voice {
 
     /** Название и собственный (не цитата из книг) девиз фракции. */
     static String proclamation(String catName) {
+        if (catName == null) return null;
+        if (!ru) return proclamationEn(catName);
+        String n = catName.toLowerCase();
+        if (n.contains("dark angels")) return "Первый легион. Ангелы Тьмы. Наши секреты — наша броня.";
+        if (n.contains("emperor's children") || n.contains("emperor’s children")) return "Третий легион. Дети Императора. Ничто, кроме безупречности.";
+        if (n.contains("iron warriors")) return "Четвёртый легион. Железные Воины. Каждая стена падёт.";
+        if (n.contains("white scars")) return "Пятый легион. Белые Шрамы. Быстры, как буря.";
+        if (n.contains("space wolves")) return "Шестой легион. Космические Волки. Охота начинается.";
+        if (n.contains("imperial fists")) return "Седьмой легион. Имперские Кулаки. Этот рубеж устоит.";
+        if (n.contains("night lords")) return "Восьмой легион. Ночные Властелины. Пусть боятся тьмы.";
+        if (n.contains("blood angels")) return "Девятый легион. Кровавые Ангелы. Крылья из огня, сердца из ярости.";
+        if (n.contains("iron hands")) return "Десятый легион. Железные Руки. Сталь не дрогнет.";
+        if (n.contains("world eaters")) return "Двенадцатый легион. Пожиратели Миров. Без оков и без пощады.";
+        if (n.contains("ultramarines")) return "Тринадцатый легион. Ультрамарины. Дисциплина — это победа.";
+        if (n.contains("death guard")) return "Четырнадцатый легион. Гвардия Смерти. Мы выдержим всё.";
+        if (n.contains("thousand sons")) return "Пятнадцатый легион. Тысяча Сынов. Звёзды говорили.";
+        if (n.contains("sons of horus")) return "Шестнадцатый легион. Сыновья Хоруса. Где ведёт Вармастер, там мы идём.";
+        if (n.contains("word bearers")) return "Семнадцатый легион. Носители Слова. Наша вера — пылающий клинок.";
+        if (n.contains("salamanders")) return "Восемнадцатый легион. Саламандры. Выкованы в пламени, закалены долгом.";
+        if (n.contains("raven guard")) return "Девятнадцатый легион. Гвардия Ворона. Бей из тени.";
+        if (n.contains("alpha legion")) return "Двадцатый легион. Альфа Легион. Мы повсюду.";
+        if (n.contains("blackshields")) return "Чёрные Щиты. Ни знамени, ни господина, ни милости.";
+        if (n.contains("shattered")) return "Расколотые Легионы. Сломлены, но не побеждены.";
+        if (n.contains("solar auxilia")) return "Солнечные Вспомогательные. Стойте твёрдо и стреляйте как один.";
+        if (n.contains("custodes")) return "Легион Кустодес. Никто не пройдёт.";
+        if (n.contains("mechanicum")) return "Механикум. Машины войны пробуждаются.";
+        if (n.contains("skitarii")) return "Скитарии. Плоть подчиняется кузне.";
+        if (n.contains("titanicus")) return "Легион Титаникус. Боги-машины шагают.";
+        if (n.contains("questoris")) return "Семья Квестрис. За дом и за честь.";
+        if (n.contains("militia")) return "Имперская милиция. Десять тысяч винтовок, одна воля.";
+        if (n.contains("daemon")) return "Варп голоден.";
+        if (n.contains("assassin")) return "Дивизия Ассасинорум. Тишина. Затем смерть.";
+        if (n.contains("psykana")) return "Анафема Психана. Тишина — наше оружие.";
+        if (n.contains("knights-errant")) return "Странствующие Рыцари. Тени на службе Императора.";
+        return catName + ".";
+    }
+
+    static String proclamationEn(String catName) {
         if (catName == null) return null;
         String n = catName.toLowerCase();
         if (n.contains("dark angels")) return "The First Legion. Dark Angels. Our secrets are our armour.";

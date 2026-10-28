@@ -318,7 +318,7 @@ final class BattleSetupScreen extends Screen {
         b.save(a);
         Sfx.play("gong");
         Ui.haptic(Ui.HEAVY);
-        Voice.say("Let the battle begin.");
+        Voice.say(Voice.line("Да начнётся битва.", "Let the battle begin."));
         a.replaceTop(new BattleScreen(a, b));
     }
 
