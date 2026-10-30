@@ -48,6 +48,8 @@ final class Ui {
 
     /** Тёмная тема — «когитатор»; светлая — прежняя, пергамент и бирюзовая сталь. */
     static boolean dark = true;
+    /** Режим варпа (тема Хаоса): сервочереп сквернится. Ставится из Eggs.applyChaos. */
+    static boolean warp = false;
 
     static void setDark(boolean d) {
         dark = d;
@@ -902,6 +904,7 @@ final class Ui {
             float bob = (float) Math.sin(t * 1.6) * h * 0.04f;
             float tilt = (float) Math.sin(t * 0.9) * 3f;
             float cx = w / 2, cy = h / 2 + bob;
+            RectF dst = new RectF(cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
             // тень снизу
             p.setShader(new RadialGradient(cx, h - dp(4), bw * 0.4f, 0x50000000, 0x00000000, Shader.TileMode.CLAMP));
             c.drawOval(new RectF(cx - bw * 0.4f, h - dp(10), cx + bw * 0.4f, h), p);
@@ -909,14 +912,59 @@ final class Ui {
             c.save();
             c.rotate(tilt, cx, cy);
             if (mirror) c.scale(-1, 1, cx, cy);
-            c.drawBitmap(b, null, new RectF(cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2), p);
-            float ex = cx - bw / 2 + bw * 0.588f, ey = cy - bh / 2 + bh * 0.446f;
-            float pulse = (float) (0.55 + 0.45 * Math.sin(t * 3.1));
-            p.setShader(new RadialGradient(ex, ey, bw * 0.16f, Theme.alpha(0xFFFF3020, 0.55f * pulse), 0x00FF3020, Shader.TileMode.CLAMP));
-            c.drawCircle(ex, ey, bw * 0.16f, p);
-            p.setShader(null);
+            if (warp) {
+                // скверна: багрово-фиолетовый оттенок, дёрганье и глитч-призраки
+                p.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFFFF6090, android.graphics.PorterDuff.Mode.MULTIPLY));
+                // глитч: случайный сдвиг каждые ~140 мс
+                long slot = SystemClock.uptimeMillis() / 140;
+                java.util.Random g = new java.util.Random(slot);
+                boolean glitch = g.nextFloat() < 0.3f;
+                float gx = glitch ? (g.nextFloat() - 0.5f) * bw * 0.14f : 0;
+                float gy = glitch ? (g.nextFloat() - 0.5f) * bh * 0.08f : 0;
+                if (glitch) {
+                    p.setAlpha(70);
+                    c.drawBitmap(b, null, offset(dst, gx + bw * 0.05f, gy), p);
+                    c.drawBitmap(b, null, offset(dst, gx - bw * 0.05f, gy - bh * 0.03f), p);
+                    p.setAlpha(255);
+                }
+                c.drawBitmap(b, null, offset(dst, gx, gy), p);
+                p.setColorFilter(null);
+                // трещины скверны по черепу
+                p.setColor(0xAA1A0508);
+                p.setStrokeWidth(Math.max(1f, bw * 0.012f));
+                p.setStyle(Paint.Style.STROKE);
+                Path cr = new Path();
+                cr.moveTo(dst.left + bw * 0.3f, dst.top + bh * 0.12f);
+                cr.lineTo(dst.left + bw * 0.38f, dst.top + bh * 0.3f);
+                cr.lineTo(dst.left + bw * 0.32f, dst.top + bh * 0.45f);
+                cr.lineTo(dst.left + bw * 0.42f, dst.top + bh * 0.6f);
+                c.drawPath(cr, p);
+                cr.reset();
+                cr.moveTo(dst.left + bw * 0.72f, dst.top + bh * 0.2f);
+                cr.lineTo(dst.left + bw * 0.64f, dst.top + bh * 0.38f);
+                cr.lineTo(dst.left + bw * 0.7f, dst.top + bh * 0.52f);
+                c.drawPath(cr, p);
+                p.setStyle(Paint.Style.FILL);
+                // глаз скверны: фиолетовое пламя с рваным мерцанием
+                float ex = cx - bw / 2 + bw * 0.588f + gx, ey = cy - bh / 2 + bh * 0.446f + gy;
+                float pulse = (float) (0.45 + 0.55 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 1.7)));
+                p.setShader(new RadialGradient(ex, ey, bw * 0.22f, Theme.alpha(0xFFB020FF, 0.7f * pulse), 0x00B020FF, Shader.TileMode.CLAMP));
+                c.drawCircle(ex, ey, bw * 0.22f, p);
+                p.setShader(null);
+            } else {
+                c.drawBitmap(b, null, dst, p);
+                float ex = cx - bw / 2 + bw * 0.588f, ey = cy - bh / 2 + bh * 0.446f;
+                float pulse = (float) (0.55 + 0.45 * Math.sin(t * 3.1));
+                p.setShader(new RadialGradient(ex, ey, bw * 0.16f, Theme.alpha(0xFFFF3020, 0.55f * pulse), 0x00FF3020, Shader.TileMode.CLAMP));
+                c.drawCircle(ex, ey, bw * 0.16f, p);
+                p.setShader(null);
+            }
             c.restore();
             postInvalidateDelayed(40);
+        }
+
+        private static RectF offset(RectF r, float dx, float dy) {
+            return new RectF(r.left + dx, r.top + dy, r.right + dx, r.bottom + dy);
         }
     }
 

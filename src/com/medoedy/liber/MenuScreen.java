@@ -209,7 +209,7 @@ final class MenuScreen extends Screen {
         say.animate().scaleX(1f).scaleY(1f).setStartDelay(1100).setDuration(380).setInterpolator(new OvershootInterpolator(2.2f)).withStartAction(new Runnable() {
             public void run() { Sfx.play("servo", 0.6f, 1.25f); Voice.saySkull(say.getText().toString()); }
         }).start();
-        say.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { say.animate().alpha(0f).scaleX(0.8f).scaleY(0.8f).setDuration(160).start(); } });
+        say.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { say.animate().cancel(); Voice.stop(); say.setVisibility(View.GONE); } });
         // ---- пасхалки
         skull = sk;
         Eggs.emblemGestures(a, hx, say);
@@ -326,6 +326,8 @@ final class MenuScreen extends Screen {
     void shaken() { Eggs.exterminatus(a, skull); }
 
     static void pop(TextView say, String text) {
+        say.animate().cancel();
+        say.setVisibility(View.VISIBLE);
         say.setText(text);
         say.setAlpha(1f);
         say.setScaleX(0.4f);

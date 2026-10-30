@@ -466,6 +466,8 @@ final class Eggs {
 
     static void applyChaos(MainActivity a) {
         boolean on = a.prefs.getBoolean("chaos", false);
+        Ui.warp = on;
+        Voice.warp = on;
         if (!on) {
             a.root.setLayerType(View.LAYER_TYPE_NONE, null);
             stopVeil(a);
@@ -650,13 +652,16 @@ final class Eggs {
         a.h.postDelayed(new Runnable() {
             public void run() {
                 applyChaos(a);
-                a.toast(on ? "Варп шепчет… Тема Хаоса пробуждена. Тот же жест вернёт свет Императора." : "Скверна изгнана. Свет Императора вернулся.");
+                a.toast(on ? "Варп шепчет… Тема Хаоса пробуждена. Долгое нажатие на эмблему вернёт свет Императора." : "Скверна изгнана. Свет Императора вернулся.");
             }
         }, 350);
     }
 
-    /** Жесты по эмблеме меню: 7 тапов — литания; свайпы вверх-вверх-вниз-вниз — тема Хаоса. */
+    /** Жесты по эмблеме меню: 7 тапов — литания; долгое нажатие (или свайпы UUDD) — тема Хаоса. */
     static void emblemGestures(final MainActivity a, final View hx, final TextView say) {
+        hx.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) { toggleChaos(a); return true; }
+        });
         final float slop = dp(36);
         hx.setOnTouchListener(new View.OnTouchListener() {
             float y0;

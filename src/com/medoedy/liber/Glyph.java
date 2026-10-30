@@ -340,138 +340,220 @@ final class Glyph {
         d.setColor(0xCC0E1311);
         Path q = new Path();
         switch (kind) {
-            case "da": { // Ангелы Тьмы: распахнутое крыло над вертикальным клинком
-                q.moveTo(cx, cy + r); q.lineTo(cx, cy - r * 0.5f); q.lineTo(cx + r * 0.1f, cy - r * 0.62f); q.lineTo(cx - r * 0.1f, cy - r * 0.62f); q.close();
+            case "da": { // Ангелы Тьмы: крылатый меч — клинок остриём вниз, крылья у гарды
+                q.moveTo(cx - r * 0.1f, cy - r * 0.1f); q.lineTo(cx + r * 0.1f, cy - r * 0.1f); q.lineTo(cx, cy + r * 0.9f); q.close();
                 c.drawPath(q, p);
+                c.drawRect(cx - r * 0.06f, cy - r * 0.55f, cx + r * 0.06f, cy - r * 0.1f, p);
+                c.drawCircle(cx, cy - r * 0.64f, r * 0.1f, p);
+                c.drawRect(cx - r * 0.32f, cy - r * 0.18f, cx + r * 0.32f, cy - r * 0.06f, p);
                 for (int side = -1; side <= 1; side += 2) {
                     Path w = new Path();
-                    w.moveTo(cx, cy - r * 0.1f);
-                    w.quadTo(cx + side * r * 0.8f, cy - r * 0.9f, cx + side * r, cy - r * 0.55f);
-                    w.quadTo(cx + side * r * 0.6f, cy - r * 0.4f, cx, cy + r * 0.15f);
+                    w.moveTo(cx + side * r * 0.15f, cy - r * 0.05f);
+                    w.quadTo(cx + side * r * 0.6f, cy - r * 0.6f, cx + side * r, cy - r * 0.78f);
+                    w.quadTo(cx + side * r * 0.72f, cy - r * 0.42f, cx + side * r * 0.62f, cy - r * 0.3f);
+                    w.quadTo(cx + side * r * 0.5f, cy - r * 0.45f, cx + side * r * 0.38f, cy - r * 0.2f);
+                    w.quadTo(cx + side * r * 0.3f, cy - r * 0.28f, cx + side * r * 0.18f, cy - r * 0.02f);
                     w.close();
                     c.drawPath(w, p);
                 }
                 break;
             }
-            case "ec": { // Дети Императора: птица-феникс в обращённом полумесяце
-                q.addArc(new RectF(cx - r, cy - r * 0.75f, cx + r, cy + r * 0.9f), 200, 140);
-                c.drawPath(q, s);
-                for (int i = -1; i <= 1; i++) {
-                    Path t = new Path();
-                    t.moveTo(cx + i * r * 0.28f, cy + r * 0.85f);
-                    t.quadTo(cx + i * r * 0.5f, cy + r * 0.25f, cx + i * r * 0.62f, cy - r * 0.15f);
-                    c.drawPath(t, s);
+            case "ec": { // Дети Императора: Палатинская акуила — орёл с поднятыми крыльями
+                for (int side = -1; side <= 1; side += 2) {
+                    Path w = new Path();
+                    w.moveTo(cx + side * r * 0.08f, cy + r * 0.25f);
+                    w.quadTo(cx + side * r * 0.5f, cy - r * 0.1f, cx + side * r * 0.9f, cy - r * 0.85f);
+                    w.quadTo(cx + side * r * 0.72f, cy - r * 0.28f, cx + side * r * 0.58f, cy - r * 0.12f);
+                    w.quadTo(cx + side * r * 0.45f, cy - r * 0.3f, cx + side * r * 0.3f, cy - r * 0.05f);
+                    w.quadTo(cx + side * r * 0.2f, cy - r * 0.15f, cx + side * r * 0.12f, cy + r * 0.1f);
+                    w.close();
+                    c.drawPath(w, p);
                 }
-                c.drawCircle(cx, cy - r * 0.1f, r * 0.2f, p);
+                q.moveTo(cx, cy - r * 0.15f); q.lineTo(cx + r * 0.14f, cy + r * 0.45f); q.lineTo(cx + r * 0.2f, cy + r * 0.9f);
+                q.lineTo(cx, cy + r * 0.7f); q.lineTo(cx - r * 0.2f, cy + r * 0.9f); q.lineTo(cx - r * 0.14f, cy + r * 0.45f); q.close();
+                c.drawPath(q, p);
+                c.drawCircle(cx, cy - r * 0.28f, r * 0.16f, p);
+                q.reset(); q.moveTo(cx + r * 0.1f, cy - r * 0.32f); q.lineTo(cx + r * 0.34f, cy - r * 0.22f); q.lineTo(cx + r * 0.12f, cy - r * 0.16f); q.close();
+                c.drawPath(q, p);
                 break;
             }
-            case "iw": { // Железные Воины: броневая башня со щелью и заклёпками
-                c.drawRoundRect(new RectF(cx - r * 0.85f, cy - r * 0.35f, cx + r * 0.85f, cy + r * 0.75f), r * 0.12f, r * 0.12f, p);
-                q.moveTo(cx - r * 0.5f, cy - r * 0.35f); q.lineTo(cx - r * 0.35f, cy - r * 0.8f); q.lineTo(cx + r * 0.35f, cy - r * 0.8f); q.lineTo(cx + r * 0.5f, cy - r * 0.35f); q.close();
+            case "iw": { // Железные Воины: железный череп в шлеме — купол, злые глаза, решётка-рот
+                q.moveTo(cx - r * 0.62f, cy - r * 0.08f);
+                q.quadTo(cx - r * 0.62f, cy - r * 0.85f, cx, cy - r * 0.85f);
+                q.quadTo(cx + r * 0.62f, cy - r * 0.85f, cx + r * 0.62f, cy - r * 0.08f);
+                q.lineTo(cx + r * 0.45f, cy + r * 0.85f); q.lineTo(cx - r * 0.45f, cy + r * 0.85f);
+                q.close();
                 c.drawPath(q, p);
-                d.setStrokeWidth(r * 0.1f);
-                c.drawLine(cx - r * 0.45f, cy - r * 0.05f, cx + r * 0.45f, cy - r * 0.05f, d);
-                for (int i = -2; i <= 2; i++) c.drawCircle(cx + i * r * 0.32f, cy + r * 0.4f, r * 0.07f, d);
+                q.reset();
+                q.moveTo(cx - r * 0.42f, cy + r * 0.02f); q.lineTo(cx - r * 0.12f, cy + r * 0.12f); q.lineTo(cx - r * 0.1f, cy + r * 0.24f); q.lineTo(cx - r * 0.45f, cy + r * 0.14f); q.close();
+                c.drawPath(q, d);
+                q.reset();
+                q.moveTo(cx + r * 0.42f, cy + r * 0.02f); q.lineTo(cx + r * 0.12f, cy + r * 0.12f); q.lineTo(cx + r * 0.1f, cy + r * 0.24f); q.lineTo(cx + r * 0.45f, cy + r * 0.14f); q.close();
+                c.drawPath(q, d);
+                for (int i = -2; i <= 2; i++) c.drawRect(cx + i * r * 0.17f - r * 0.045f, cy + r * 0.38f, cx + i * r * 0.17f + r * 0.045f, cy + r * 0.78f, d);
                 break;
             }
-            case "ws": { // Белые Шрамы: ударная молния на скаку
-                q.moveTo(cx + r * 0.15f, cy - r); q.lineTo(cx - r * 0.45f, cy + r * 0.1f); q.lineTo(cx - r * 0.02f, cy + r * 0.1f); q.lineTo(cx - r * 0.15f, cy + r); q.lineTo(cx + r * 0.45f, cy - r * 0.12f); q.lineTo(cx + r * 0.02f, cy - r * 0.12f); q.close();
+            case "ws": { // Белые Шрамы: удар молнии
+                q.moveTo(cx + r * 0.45f, cy - r * 0.95f);
+                q.lineTo(cx - r * 0.55f, cy + r * 0.18f); q.lineTo(cx - r * 0.08f, cy + r * 0.18f);
+                q.lineTo(cx - r * 0.45f, cy + r * 0.95f);
+                q.lineTo(cx + r * 0.55f, cy - r * 0.15f); q.lineTo(cx + r * 0.08f, cy - r * 0.15f);
+                q.close();
                 c.drawPath(q, p);
-                c.drawLine(cx - r, cy + r * 0.55f, cx + r, cy + r * 0.55f, s);
                 break;
             }
-            case "sw": { // Космические Волки: угловатая морда волка
-                q.moveTo(cx - r * 0.85f, cy - r * 0.6f); q.lineTo(cx - r * 0.3f, cy - r * 0.25f); q.lineTo(cx - r * 0.15f, cy - r * 0.85f);
-                q.lineTo(cx + r * 0.15f, cy - r * 0.85f); q.lineTo(cx + r * 0.3f, cy - r * 0.25f); q.lineTo(cx + r * 0.85f, cy - r * 0.6f);
-                q.lineTo(cx + r * 0.55f, cy + r * 0.2f); q.lineTo(cx + r * 0.2f, cy + r * 0.75f); q.lineTo(cx - r * 0.2f, cy + r * 0.75f); q.lineTo(cx - r * 0.55f, cy + r * 0.2f); q.close();
+            case "sw": { // Космические Волки: оскаленная голова волка в профиль
+                q.moveTo(cx - r * 0.9f, cy - r * 0.05f);
+                q.lineTo(cx - r * 0.55f, cy - r * 0.25f);
+                q.lineTo(cx - r * 0.3f, cy - r * 0.28f);
+                q.lineTo(cx - r * 0.05f, cy - r * 0.85f);
+                q.lineTo(cx + r * 0.15f, cy - r * 0.4f);
+                q.lineTo(cx + r * 0.5f, cy - r * 0.55f);
+                q.lineTo(cx + r * 0.55f, cy - r * 0.15f);
+                q.lineTo(cx + r * 0.75f, cy + r * 0.25f);
+                q.lineTo(cx + r * 0.3f, cy + r * 0.35f);
+                q.lineTo(cx - r * 0.15f, cy + r * 0.55f);
+                q.lineTo(cx - r * 0.35f, cy + r * 0.3f);
+                q.lineTo(cx - r * 0.45f, cy + r * 0.42f); q.lineTo(cx - r * 0.52f, cy + r * 0.28f);
+                q.lineTo(cx - r * 0.62f, cy + r * 0.4f); q.lineTo(cx - r * 0.7f, cy + r * 0.26f);
+                q.lineTo(cx - r * 0.85f, cy + r * 0.3f);
+                q.close();
                 c.drawPath(q, p);
-                d.setStrokeWidth(r * 0.12f);
-                c.drawLine(cx - r * 0.3f, cy + r * 0.1f, cx - r * 0.05f, cy + r * 0.35f, d);
-                c.drawLine(cx + r * 0.3f, cy + r * 0.1f, cx + r * 0.05f, cy + r * 0.35f, d);
+                d.setStrokeWidth(r * 0.09f);
+                c.drawLine(cx - r * 0.42f, cy - r * 0.1f, cx - r * 0.18f, cy - r * 0.02f, d);
                 break;
             }
             case "if": // Имперские Кулаки: кулак (общий символ)
                 draw(c, "fist", cx, cy, r * 0.95f, color);
                 break;
-            case "nl": { // Ночные Властелины: пара кожистых крыльев с черепом
+            case "nl": { // Ночные Властелины: череп с кожистыми крыльями ночи
                 for (int side = -1; side <= 1; side += 2) {
                     Path w = new Path();
-                    w.moveTo(cx, cy - r * 0.1f);
-                    w.quadTo(cx + side * r * 0.7f, cy - r * 1.05f, cx + side * r * 1.05f, cy - r * 0.5f);
-                    for (int k = 0; k < 3; k++) {
-                        float bx = cx + side * (r * (1.0f - k * 0.3f)), by = cy - r * (0.5f - k * 0.28f);
-                        w.lineTo(bx, by);
-                        w.lineTo(cx + side * r * (0.75f - k * 0.28f), by + r * 0.18f);
-                    }
+                    w.moveTo(cx + side * r * 0.2f, cy + r * 0.1f);
+                    w.quadTo(cx + side * r * 0.55f, cy - r * 0.5f, cx + side * r, cy - r * 0.9f);
+                    w.quadTo(cx + side * r * 0.78f, cy - r * 0.42f, cx + side * r * 0.66f, cy - r * 0.34f);
+                    w.quadTo(cx + side * r * 0.5f, cy - r * 0.22f, cx + side * r * 0.4f, cy - r * 0.12f);
+                    w.quadTo(cx + side * r * 0.28f, cy - r * 0.04f, cx + side * r * 0.2f, cy + r * 0.1f);
                     w.close();
                     c.drawPath(w, p);
                 }
-                Ui.drawSkull(c, cx, cy + r * 0.45f, r * 0.42f, color);
+                Ui.drawSkull(c, cx, cy + r * 0.32f, r * 0.5f, color);
                 break;
             }
-            case "ba": { // Кровавые Ангелы: капля между двумя крыльями
-                q.moveTo(cx, cy - r * 0.9f); q.quadTo(cx + r * 0.5f, cy - r * 0.1f, cx, cy + r * 0.55f); q.quadTo(cx - r * 0.5f, cy - r * 0.1f, cx, cy - r * 0.9f); q.close();
+            case "ba": { // Кровавые Ангелы: капля крови в крыльях
+                q.moveTo(cx, cy - r * 0.95f);
+                q.quadTo(cx + r * 0.42f, cy - r * 0.25f, cx + r * 0.3f, cy + r * 0.1f);
+                q.quadTo(cx + r * 0.18f, cy + r * 0.45f, cx, cy + r * 0.55f);
+                q.quadTo(cx - r * 0.18f, cy + r * 0.45f, cx - r * 0.3f, cy + r * 0.1f);
+                q.quadTo(cx - r * 0.42f, cy - r * 0.25f, cx, cy - r * 0.95f);
+                q.close();
                 c.drawPath(q, p);
                 for (int side = -1; side <= 1; side += 2) {
                     Path w = new Path();
-                    w.moveTo(cx, cy - r * 0.3f); w.quadTo(cx + side * r * 0.9f, cy - r * 0.75f, cx + side * r, cy - r * 0.2f);
-                    w.quadTo(cx + side * r * 0.6f, cy + r * 0.1f, cx, cy + r * 0.3f); w.close();
+                    w.moveTo(cx + side * r * 0.25f, cy - r * 0.35f);
+                    w.quadTo(cx + side * r * 0.7f, cy - r * 0.7f, cx + side * r, cy - r * 0.65f);
+                    w.quadTo(cx + side * r * 0.75f, cy - r * 0.3f, cx + side * r * 0.68f, cy - r * 0.22f);
+                    w.quadTo(cx + side * r * 0.55f, cy - r * 0.35f, cx + side * r * 0.45f, cy - r * 0.18f);
+                    w.quadTo(cx + side * r * 0.38f, cy - r * 0.28f, cx + side * r * 0.28f, cy - r * 0.05f);
+                    w.close();
                     c.drawPath(w, p);
                 }
                 break;
             }
-            case "ih": { // Железные Руки: шестерня с разломом
-                int teeth = 8;
-                for (int i = 0; i < teeth; i++) {
-                    double a = Math.PI * 2 * i / teeth;
-                    c.drawRect(cx + (float) Math.cos(a) * r * 0.75f - r * 0.09f, cy + (float) Math.sin(a) * r * 0.75f - r * 0.09f,
-                            cx + (float) Math.cos(a) * r * 0.75f + r * 0.09f, cy + (float) Math.sin(a) * r * 0.75f + r * 0.09f, p);
+            case "ih": { // Железные Руки: механическая длань
+                d.setStrokeWidth(r * 0.06f);
+                c.drawRoundRect(new RectF(cx - r * 0.42f, cy - r * 0.05f, cx + r * 0.42f, cy + r * 0.75f), r * 0.14f, r * 0.14f, p);
+                c.drawRect(cx - r * 0.3f, cy + r * 0.7f, cx + r * 0.3f, cy + r * 0.95f, p);
+                float[] fh = {-0.55f, -0.75f, -0.8f, -0.6f};
+                for (int i = 0; i < 4; i++) {
+                    float fx = cx - r * 0.315f + i * r * 0.21f;
+                    c.drawRoundRect(new RectF(fx - r * 0.085f, cy + fh[i] * r, fx + r * 0.085f, cy + r * 0.12f), r * 0.08f, r * 0.08f, p);
+                    c.drawLine(fx - r * 0.085f, cy + fh[i] * r * 0.4f, fx + r * 0.085f, cy + fh[i] * r * 0.4f, d);
                 }
-                c.drawCircle(cx, cy, r * 0.62f, p);
-                d.setStrokeWidth(r * 0.16f);
-                c.drawLine(cx - r * 0.5f, cy - r * 0.5f, cx + r * 0.5f, cy + r * 0.5f, d);
-                c.drawLine(cx - r * 0.15f, cy + r * 0.45f, cx + r * 0.15f, cy + r * 0.75f, d);
+                c.save();
+                c.rotate(-35, cx - r * 0.42f, cy + r * 0.3f);
+                c.drawRoundRect(new RectF(cx - r * 0.62f, cy + r * 0.18f, cx - r * 0.42f, cy + r * 0.52f), r * 0.08f, r * 0.08f, p);
+                c.restore();
+                c.drawLine(cx - r * 0.42f, cy + r * 0.35f, cx + r * 0.42f, cy + r * 0.35f, d);
                 break;
             }
-            case "we": { // Пожиратели Миров: цепная секира
-                q.moveTo(cx - r * 0.15f, cy - r * 0.55f); q.quadTo(cx + r * 0.9f, cy - r * 0.95f, cx + r * 0.75f, cy + r * 0.05f);
-                q.quadTo(cx + r * 0.3f, cy - r * 0.1f, cx - r * 0.1f, cy + r * 0.05f); q.close();
+            case "we": { // Пожиратели Миров: планета в клыках пасти
+                c.drawCircle(cx, cy, r * 0.58f, p);
+                d.setStrokeWidth(r * 0.07f);
+                Path cr = new Path();
+                cr.moveTo(cx - r * 0.4f, cy - r * 0.15f); cr.lineTo(cx - r * 0.1f, cy + r * 0.1f); cr.lineTo(cx + r * 0.15f, cy - r * 0.1f); cr.lineTo(cx + r * 0.4f, cy + r * 0.12f);
+                c.drawPath(cr, d);
+                for (int half = -1; half <= 1; half += 2)
+                    for (int i = -2; i <= 2; i++) {
+                        float tx = cx + i * r * 0.36f;
+                        Path t = new Path();
+                        t.moveTo(tx - r * 0.13f, cy + half * r * 0.95f);
+                        t.quadTo(tx - r * 0.12f, cy + half * r * 0.5f, tx - r * 0.09f, cy + half * r * 0.28f);
+                        t.lineTo(tx, cy + half * r * 0.05f);
+                        t.lineTo(tx + r * 0.09f, cy + half * r * 0.28f);
+                        t.quadTo(tx + r * 0.12f, cy + half * r * 0.5f, tx + r * 0.13f, cy + half * r * 0.95f);
+                        t.close();
+                        c.drawPath(t, p);
+                    }
+                break;
+            }
+            case "um": { // Ультрамарины: обращённая омега
+                q.moveTo(cx - r * 0.95f, cy - r * 0.72f);
+                q.lineTo(cx - r * 0.62f, cy - r * 0.72f);
+                q.quadTo(cx - r * 0.72f, cy + r * 0.3f, cx, cy + r * 0.52f);
+                q.quadTo(cx + r * 0.72f, cy + r * 0.3f, cx + r * 0.62f, cy - r * 0.72f);
+                q.lineTo(cx + r * 0.95f, cy - r * 0.72f);
+                s.setStrokeWidth(r * 0.26f);
+                s.setStrokeCap(Paint.Cap.BUTT);
+                c.drawPath(q, s);
+                s.setStrokeCap(Paint.Cap.ROUND);
+                break;
+            }
+            case "dg": { // Гвардия Смерти: череп в ореоле железных шипов
+                for (int i = 0; i < 7; i++) {
+                    double a = -Math.PI + Math.PI * i / 6;
+                    float bx = cx + (float) Math.cos(a) * r * 0.58f, by = cy + (float) Math.sin(a) * r * 0.58f;
+                    float tx = cx + (float) Math.cos(a) * r * 0.95f, ty = cy + (float) Math.sin(a) * r * 0.95f;
+                    float nx = (float) Math.cos(a + Math.PI / 2) * r * 0.07f, ny = (float) Math.sin(a + Math.PI / 2) * r * 0.07f;
+                    Path sp = new Path();
+                    sp.moveTo(bx - nx, by - ny); sp.lineTo(bx + nx, by + ny); sp.lineTo(tx, ty); sp.close();
+                    c.drawPath(sp, p);
+                }
+                Ui.drawSkull(c, cx, cy + r * 0.12f, r * 0.62f, color);
+                break;
+            }
+            case "ts": { // Тысяча Сынов: уроборос — змей, кусающий свой хвост
+                s.setStrokeWidth(r * 0.2f);
+                q.addArc(new RectF(cx - r * 0.6f, cy - r * 0.6f, cx + r * 0.6f, cy + r * 0.6f), 35, 290);
+                c.drawPath(q, s);
+                double ha = Math.toRadians(-35);
+                float hx = cx + (float) Math.cos(ha) * r * 0.6f, hy = cy + (float) Math.sin(ha) * r * 0.6f;
+                c.drawCircle(hx, hy, r * 0.19f, p);
+                c.drawCircle(hx + r * 0.04f, hy - r * 0.06f, r * 0.05f, d);
+                double ta = Math.toRadians(35);
+                float tx = cx + (float) Math.cos(ta) * r * 0.6f, ty = cy + (float) Math.sin(ta) * r * 0.6f;
+                q.reset(); q.moveTo(tx - r * 0.12f, ty + r * 0.02f); q.lineTo(tx + r * 0.14f, ty - r * 0.08f); q.lineTo(tx + r * 0.02f, ty + r * 0.12f); q.close();
                 c.drawPath(q, p);
-                s.setStrokeWidth(r * 0.14f);
-                for (int i = 0; i < 5; i++) c.drawLine(cx - r * 0.05f, cy - r * 0.55f + i * r * 0.3f, cx + r * 0.15f, cy - r * 0.4f + i * r * 0.3f, s);
-                c.drawRect(cx - r * 0.16f, cy - r * 0.55f, cx + r * 0.08f, cy + r * 0.95f, p);
                 break;
             }
-            case "um": { // Ультрамарины: перевёрнутая омега
-                q.moveTo(cx - r * 0.8f, cy - r * 0.7f); q.quadTo(cx - r * 0.8f, cy + r * 0.55f, cx, cy + r * 0.55f);
-                q.quadTo(cx + r * 0.8f, cy + r * 0.55f, cx + r * 0.8f, cy - r * 0.7f);
-                s.setStrokeWidth(r * 0.28f);
+            case "soh": { // Сыновья Хоруса: Око Хоруса — бровь, миндалина, завиток и слеза
+                s.setStrokeWidth(r * 0.13f);
+                q.moveTo(cx - r * 0.75f, cy - r * 0.55f); q.quadTo(cx, cy - r * 0.85f, cx + r * 0.8f, cy - r * 0.5f);
                 c.drawPath(q, s);
-                break;
-            }
-            case "dg": { // Гвардия Смерти: три дуги вокруг точки (плотоядный триксель)
-                for (int i = 0; i < 3; i++) {
-                    double a0 = Math.PI * 2 * i / 3 - Math.PI / 2;
-                    float ox = cx + (float) Math.cos(a0) * r * 0.32f, oy = cy + (float) Math.sin(a0) * r * 0.32f;
-                    c.drawArc(new RectF(ox - r * 0.5f, oy - r * 0.5f, ox + r * 0.5f, oy + r * 0.5f), (float) Math.toDegrees(a0) + 40, 280, false, s);
-                }
-                c.drawCircle(cx, cy, r * 0.16f, p);
-                break;
-            }
-            case "ts": { // Тысяча Сынов: всевидящее око с лучами
-                draw(c, "eye", cx, cy, r * 0.8f, color);
-                s.setStrokeWidth(r * 0.09f);
-                for (int i = 0; i < 8; i++) {
-                    double a = Math.PI * i / 4;
-                    c.drawLine(cx + (float) Math.cos(a) * r * 0.72f, cy + (float) Math.sin(a) * r * 0.72f, cx + (float) Math.cos(a) * r, cy + (float) Math.sin(a) * r, s);
-                }
-                break;
-            }
-            case "soh": { // Сыновья Хоруса: серп-око (орбита + зрачок)
-                q.addArc(new RectF(cx - r * 0.8f, cy - r * 0.8f, cx + r * 0.8f, cy + r * 0.8f), -70, 290);
+                q.reset();
+                q.moveTo(cx - r * 0.7f, cy - r * 0.15f); q.quadTo(cx, cy - r * 0.5f, cx + r * 0.7f, cy - r * 0.15f);
+                q.quadTo(cx, cy + r * 0.2f, cx - r * 0.7f, cy - r * 0.15f);
                 c.drawPath(q, s);
-                c.drawCircle(cx + r * 0.18f, cy - r * 0.05f, r * 0.22f, p);
-                q.reset(); q.moveTo(cx + r * 0.36f, cy + r * 0.1f); q.quadTo(cx + r * 0.75f, cy + r * 0.55f, cx + r * 0.1f, cy + r * 0.8f);
+                c.drawCircle(cx, cy - r * 0.14f, r * 0.17f, p);
+                q.reset();
+                q.moveTo(cx + r * 0.7f, cy - r * 0.15f);
+                q.quadTo(cx + r * 0.95f, cy + r * 0.1f, cx + r * 0.75f, cy + r * 0.35f);
+                q.quadTo(cx + r * 0.55f, cy + r * 0.6f, cx + r * 0.75f, cy + r * 0.7f);
+                c.drawPath(q, s);
+                q.reset();
+                q.moveTo(cx - r * 0.35f, cy + r * 0.05f);
+                q.lineTo(cx - r * 0.35f, cy + r * 0.55f);
+                q.lineTo(cx - r * 0.15f, cy + r * 0.85f);
                 c.drawPath(q, s);
                 break;
             }
@@ -481,32 +563,70 @@ final class Glyph {
                 c.drawPath(q, p);
                 break;
             }
-            case "sal": { // Саламандры: кузнечное пламя с горной трещиной
-                q.moveTo(cx, cy - r); q.quadTo(cx + r * 0.7f, cy - r * 0.2f, cx + r * 0.45f, cy + r * 0.4f); q.quadTo(cx + r * 0.3f, cy + r * 0.85f, cx, cy + r);
-                q.quadTo(cx - r * 0.3f, cy + r * 0.85f, cx - r * 0.45f, cy + r * 0.4f); q.quadTo(cx - r * 0.7f, cy - r * 0.2f, cx, cy - r); q.close();
+            case "sal": { // Саламандры: голова дрейка в профиль с огненным гребнем
+                q.moveTo(cx - r * 0.95f, cy + r * 0.05f);
+                q.quadTo(cx - r * 0.55f, cy - r * 0.35f, cx - r * 0.15f, cy - r * 0.42f);
+                q.lineTo(cx + r * 0.05f, cy - r * 0.55f);
+                q.lineTo(cx + r * 0.4f, cy - r);
+                q.lineTo(cx + r * 0.25f, cy - r * 0.45f);
+                q.lineTo(cx + r * 0.75f, cy - r * 0.65f);
+                q.lineTo(cx + r * 0.5f, cy - r * 0.25f);
+                q.lineTo(cx + r * 0.95f, cy - r * 0.25f);
+                q.lineTo(cx + r * 0.55f, cy + r * 0.1f);
+                q.quadTo(cx + r * 0.5f, cy + r * 0.45f, cx + r * 0.2f, cy + r * 0.55f);
+                q.lineTo(cx - r * 0.3f, cy + r * 0.8f);
+                q.quadTo(cx - r * 0.7f, cy + r * 0.75f, cx - r * 0.8f, cy + r * 0.45f);
+                q.close();
                 c.drawPath(q, p);
-                d.setStrokeWidth(r * 0.12f);
-                c.drawLine(cx - r * 0.1f, cy - r * 0.5f, cx + r * 0.15f, cy - r * 0.1f, d);
-                c.drawLine(cx + r * 0.15f, cy - r * 0.1f, cx - r * 0.05f, cy + r * 0.3f, d);
+                d.setStrokeWidth(r * 0.09f);
+                q.reset();
+                q.moveTo(cx - r * 0.9f, cy + r * 0.18f);
+                q.lineTo(cx - r * 0.68f, cy + r * 0.1f); q.lineTo(cx - r * 0.6f, cy + r * 0.22f);
+                q.lineTo(cx - r * 0.48f, cy + r * 0.14f); q.lineTo(cx - r * 0.4f, cy + r * 0.26f);
+                q.lineTo(cx - r * 0.25f, cy + r * 0.2f);
+                c.drawPath(q, d);
+                c.drawLine(cx - r * 0.35f, cy - r * 0.18f, cx - r * 0.1f, cy - r * 0.1f, d);
                 break;
             }
-            case "rg": { // Гвардия Ворона: стремительное перо-клинок
-                q.moveTo(cx + r * 0.15f, cy - r); q.quadTo(cx - r * 0.5f, cy - r * 0.3f, cx - r * 0.75f, cy + r * 0.85f);
-                q.quadTo(cx - r * 0.1f, cy + r * 0.35f, cx + r * 0.35f, cy - r * 0.35f); q.close();
+            case "rg": { // Гвардия Ворона: голова ворона в профиль
+                q.moveTo(cx - r * 0.95f, cy - r * 0.05f);
+                q.lineTo(cx - r * 0.35f, cy - r * 0.25f);
+                q.quadTo(cx + r * 0.05f, cy - r * 0.55f, cx + r * 0.45f, cy - r * 0.5f);
+                q.lineTo(cx + r * 0.85f, cy - r * 0.75f);
+                q.lineTo(cx + r * 0.6f, cy - r * 0.3f);
+                q.lineTo(cx + r * 0.95f, cy - r * 0.35f);
+                q.lineTo(cx + r * 0.6f, cy - r * 0.05f);
+                q.quadTo(cx + r * 0.55f, cy + r * 0.5f, cx + r * 0.2f, cy + r * 0.8f);
+                q.lineTo(cx - r * 0.25f, cy + r * 0.5f);
+                q.lineTo(cx - r * 0.55f, cy + r * 0.15f);
+                q.close();
                 c.drawPath(q, p);
-                s.setStrokeWidth(r * 0.1f);
-                c.drawLine(cx + r * 0.1f, cy - r * 0.8f, cx - r * 0.55f, cy + r * 0.55f, s);
+                d.setStrokeWidth(r * 0.08f);
+                c.drawLine(cx - r * 0.15f, cy - r * 0.22f, cx + r * 0.08f, cy - r * 0.15f, d);
                 break;
             }
-            case "al": { // Альфа Легион: две гидры-змея, обвивающиеся вокруг центра
-                for (int side = -1; side <= 1; side += 2) {
-                    Path h = new Path();
-                    h.moveTo(cx + side * r * 0.75f, cy - r * 0.7f);
-                    h.quadTo(cx - side * r * 0.2f, cy - r * 0.45f, cx + side * r * 0.3f, cy);
-                    h.quadTo(cx - side * r * 0.15f, cy + r * 0.45f, cx + side * r * 0.7f, cy + r * 0.7f);
-                    s.setStrokeWidth(r * 0.2f);
-                    c.drawPath(h, s);
-                    c.drawCircle(cx + side * r * 0.75f, cy - r * 0.7f, r * 0.16f, p);
+            case "al": { // Альфа Легион: трёхглавая гидра
+                q.moveTo(cx - r * 0.55f, cy + r * 0.9f);
+                q.quadTo(cx - r * 0.7f, cy + r * 0.2f, cx - r * 0.3f, cy - r * 0.05f);
+                q.lineTo(cx + r * 0.3f, cy - r * 0.05f);
+                q.quadTo(cx + r * 0.7f, cy + r * 0.2f, cx + r * 0.55f, cy + r * 0.9f);
+                q.close();
+                c.drawPath(q, p);
+                s.setStrokeWidth(r * 0.16f);
+                float[][] heads = {{-0.55f, -0.35f}, {0f, 0f}, {0.55f, 0.35f}};
+                for (float[] hd : heads) {
+                    float hx2 = cx + hd[0] * r;
+                    float gx = hx2 + hd[1] * r * 0.4f, gy = cy - r * 0.55f;
+                    Path nk = new Path();
+                    nk.moveTo(cx + hd[0] * r * 0.4f, cy + r * 0.2f);
+                    nk.quadTo(hx2, cy - r * 0.25f, gx, gy);
+                    c.drawPath(nk, s);
+                    Path hh = new Path();
+                    hh.moveTo(gx - r * 0.13f, gy + r * 0.1f);
+                    hh.lineTo(gx + r * 0.13f, gy + r * 0.1f);
+                    hh.lineTo(gx + hd[0] * r * 0.2f, gy - r * 0.28f);
+                    hh.close();
+                    c.drawPath(hh, p);
                 }
                 break;
             }

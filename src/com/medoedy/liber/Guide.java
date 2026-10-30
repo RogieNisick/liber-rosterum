@@ -99,19 +99,22 @@ final class Guide {
     }
 
     // ================================================================ фразы сервочерепа в меню
-    private static List<String> phrases;
+    private static List<String> phrases, warpPhrases;
 
     static List<String> phrases(MainActivity a) {
-        if (phrases != null) return phrases;
-        phrases = new ArrayList<String>();
+        boolean warp = a.prefs.getBoolean("chaos", false);
+        if (warp && warpPhrases != null) return warpPhrases;
+        if (!warp && phrases != null) return phrases;
+        List<String> list = new ArrayList<String>();
         try {
-            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(a.getAssets().open("phrases.txt"), "UTF-8"));
+            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(a.getAssets().open(warp ? "phrases_warp.txt" : "phrases.txt"), "UTF-8"));
             String l;
-            while ((l = br.readLine()) != null) if (!l.trim().isEmpty()) phrases.add(l.trim());
+            while ((l = br.readLine()) != null) if (!l.trim().isEmpty()) list.add(l.trim());
             br.close();
         } catch (Exception ignored) { }
-        if (phrases.isEmpty()) phrases.add("Магнус не передавал!!!");
-        return phrases;
+        if (list.isEmpty()) list.add(warp ? "Варп не передавал!!!" : "Магнус не передавал!!!");
+        if (warp) warpPhrases = list; else phrases = list;
+        return list;
     }
 
     /** Следующая фраза: все по кругу в случайном порядке, без повторов, пока не кончатся. */

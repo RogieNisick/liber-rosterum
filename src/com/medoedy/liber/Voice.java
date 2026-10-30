@@ -123,21 +123,22 @@ final class Voice {
         if (!on || text == null) return;
         if (!ready) { pending = text; pendingSkull = skull; return; }
         stop();
-        String key = skull ? "s:" + text : text;
+        if (skull && warp) text = warpMangle(text);
+        String key = skull ? (warp ? "w:" : "s:") + text : text;
         short[] pcm = cooked.get(key);
         if (pcm != null) { play(pcm, rates.get(key)); return; }
         final String id = (skull ? "s" : "v") + (++seq) + "_" + Integer.toHexString(text.hashCode());
         File f = new File(cacheDir, id + ".wav");
         try {
             if (skull) {
-                tts.setSpeechRate(1.5f);
-                tts.setPitch(1.06f);
+                if (warp) { tts.setSpeechRate(1.15f); tts.setPitch(0.68f); }
+                else { tts.setSpeechRate(1.5f); tts.setPitch(1.06f); }
             } else {
                 tts.setSpeechRate(0.82f);
                 tts.setPitch(0.72f);
             }
             Bundle b = new Bundle();
-            pendingText.put(id, skull ? "" + text : text);
+            pendingText.put(id, skull ? (warp ? "" : "") + text : text);
             int r = tts.synthesizeToFile(text, b, f, id);
             if (r != TextToSpeech.SUCCESS) speakRaw(text);
         } catch (Throwable t) { speakRaw(text); }
@@ -145,6 +146,31 @@ final class Voice {
 
     private static boolean pendingSkull;
     private static final Map<String, String> pendingText = new HashMap<String, String>();
+    /** Режим варпа: голос сервочерепа сквернится. Ставится из Eggs.applyChaos. */
+    static boolean warp;
+    private static final java.util.Random rnd = new java.util.Random();
+
+    /** Искажение речи в варпе: заикания и повторы слов. */
+    private static String warpMangle(String text) {
+        String[] words = text.split(" ");
+        StringBuilder sb = new StringBuilder();
+        boolean stut = false, dup = false;
+        for (String word : words) {
+            String clean = word.replaceAll("[^\\p{L}]", "");
+            if (!stut && clean.length() > 3 && rnd.nextFloat() < 0.3f) {
+                stut = true;
+                sb.append(clean.substring(0, 1)).append('-').append(word).append(' ');
+                continue;
+            }
+            if (!dup && clean.length() > 1 && clean.length() < 6 && rnd.nextFloat() < 0.25f) {
+                dup = true;
+                sb.append(word).append(", ").append(word.toLowerCase()).append(' ');
+                continue;
+            }
+            sb.append(word).append(' ');
+        }
+        return sb.toString().trim();
+    }
 
     private static void speakRaw(String text) {
         try {
@@ -159,9 +185,10 @@ final class Voice {
         final String raw;
         synchronized (pendingText) { raw = pendingText.remove(id); }
         if (raw == null) return;
-        final boolean skull = raw.startsWith("");
+        final boolean wv = raw.startsWith("");
+        final boolean skull = wv || raw.startsWith("");
         final String text = skull ? raw.substring(1) : raw;
-        final String key = skull ? "" + text : text;
+        final String key = skull ? (wv ? "w:" : "s:") + text : text;
         final File f = new File(cacheDir, id + ".wav");
         new Thread(new Runnable() {
             public void run() {
@@ -170,7 +197,7 @@ final class Voice {
                     short[] raw = readWav(f, srOut);
                     f.delete();
                     if (raw == null || raw.length == 0) { speakRaw(text); return; }
-                    short[] pcm = skull ? voxSkull(raw, srOut[0]) : voxCaster(raw, srOut[0]);
+                    short[] pcm = skull ? (wv ? voxWarp(raw, srOut[0]) : voxSkull(raw, srOut[0])) : voxCaster(raw, srOut[0]);
                     cooked.put(key, pcm);
                     rates.put(key, srOut[0]);
                     if (id.substring(1).startsWith(String.valueOf(seq) + "_")) play(pcm, srOut[0]);
@@ -324,6 +351,57 @@ final class Voice {
         float[] g = {0.22f, 0.12f};
         for (int k = 0; k < d.length; k++)
             for (int i = d[k]; i < n; i++) y[i] += x[i - d[k]] * g[k];
+        float peak = 0.001f;
+        for (float v : y) peak = Math.max(peak, Math.abs(v));
+        short[] out = new short[n];
+        float gn = 0.9f / peak;
+        for (int i = 0; i < n; i++) out[i] = (short) (Math.max(-1f, Math.min(1f, y[i] * gn)) * 32767);
+        return out;
+    }
+
+    /** Варп-голос сервочерепа: ниже тон, рычащая кольцевая модуляция, заикания,
+     *  выпадения кусков и биткраш — речь сквернится и ломается. */
+    static short[] voxWarp(short[] in, int sr) {
+        // 1) понижение тона
+        double k = 0.8;
+        int n = (int) (in.length / k);
+        float[] x = new float[n];
+        for (int i = 0; i < n; i++) {
+            double p = i * k;
+            int a = (int) p;
+            double fr = p - a;
+            float s0 = a < in.length ? in[a] : 0, s1 = a + 1 < in.length ? in[a + 1] : 0;
+            x[i] = (float) ((s0 + (s1 - s0) * fr) / 32768.0);
+        }
+        // 2) глитчи: повтор куска (заикание) или выпадение в тишину
+        java.util.Random r = new java.util.Random(7);
+        for (int pos = sr / 10; pos < n - sr / 5; pos += sr / 4) {
+            float roll = r.nextFloat();
+            int chunk = (int) (sr * 0.04) + r.nextInt((int) (sr * 0.04));
+            if (roll < 0.18f) {
+                for (int i = 0; i < chunk && pos + chunk + i < n; i++) x[pos + chunk + i] = x[pos + i];
+            } else if (roll < 0.3f) {
+                for (int i = 0; i < chunk && pos + i < n; i++) x[pos + i] = 0;
+            }
+        }
+        // 3) глубокая кольцевая модуляция ~26 Гц — рык
+        double tau = Math.PI * 2;
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) sr;
+            x[i] *= (float) (0.55 + 0.45 * Math.sin(tau * 26 * t));
+        }
+        // 4) жёсткий перегруз + биткраш (цифровая порча)
+        for (int i = 0; i < n; i++) {
+            float v = (float) Math.tanh(x[i] * 2.5) * 0.9f;
+            x[i] = Math.round(v * 6) / 6f;
+        }
+        // 5) короткое эхо
+        float[] y = new float[n];
+        System.arraycopy(x, 0, y, 0, n);
+        int[] d = {(int) (sr * 0.06), (int) (sr * 0.11)};
+        float[] g = {0.3f, 0.18f};
+        for (int kk = 0; kk < d.length; kk++)
+            for (int i = d[kk]; i < n; i++) y[i] += x[i - d[kk]] * g[kk];
         float peak = 0.001f;
         for (float v : y) peak = Math.max(peak, Math.abs(v));
         short[] out = new short[n];

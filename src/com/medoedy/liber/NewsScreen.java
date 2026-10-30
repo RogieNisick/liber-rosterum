@@ -59,7 +59,39 @@ final class NewsScreen extends Screen {
                 rebuild();
             }
         }), Ui.lpm(-1, dp(46), 0, dp(2), 0, dp(8)));
-        List<News.Item> items = News.load(a);
+        final List<News.Item> items = News.load(a);
+        // глашатай вестей: сервочереп зачитывает самую важную новость
+        LinearLayout hz = Ui.row(a);
+        hz.setGravity(Gravity.CENTER_VERTICAL);
+        hz.setBackground(Ui.parchment());
+        hz.setPadding(dp(6), dp(2), dp(8), dp(2));
+        hz.addView(new Ui.ServoSkull(a), Ui.lp(dp(44), dp(58)));
+        TextView ht = Ui.text(a, "СЕРВОЧЕРЕП-ГЛАШАТАЙ", 10, Theme.bodyBold, Ui.INK_RED);
+        ht.setLetterSpacing(0.12f);
+        ht.setPadding(dp(8), 0, 0, 0);
+        LinearLayout hc = Ui.col(a);
+        hc.addView(ht);
+        TextView hs = Ui.text(a, "Зачитать главную весть вслух", 14, Theme.body, Ui.INK);
+        hs.setPadding(dp(8), 0, 0, 0);
+        hc.addView(hs);
+        hz.addView(hc, Ui.weight(1));
+        hz.setClickable(true);
+        Ui.press(hz);
+        hz.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Sfx.play("servo");
+                Ui.haptic(Ui.TICK);
+                News.Item best = important(items);
+                if (best == null || best.title == null) { a.toast("Свитков пока нет — обнови вести."); return; }
+                final String lead = "Главная весть дня. " + best.title;
+                try {
+                    Translator.translate(best.title, new Translator.Done() {
+                        public void got(String ru) { Voice.saySkull("Главная весть дня. " + ru); }
+                    });
+                } catch (Throwable t) { Voice.saySkull(lead); }
+            }
+        });
+        c.addView(hz, Ui.lpm(-1, -2, 0, dp(2), 0, dp(8)));
         if (items.isEmpty() && !News.busy) {
             News.refresh(a, true, new Runnable() { public void run() { if (a.stack.peek() == NewsScreen.this) rebuild(); } });
             c.addView(Ui.text(a, "Загружаю новости…", 14, Theme.body, Ui.BONE));
@@ -72,6 +104,24 @@ final class NewsScreen extends Screen {
         }
         f.addView(a.scroll(c));
         return f;
+    }
+
+    /** Самая важная новость: свежие выше, дальше — по весу темы (правила, эрраты, очки). */
+    News.Item important(List<News.Item> items) {
+        News.Item best = null;
+        int bs = -1, idx = 0;
+        for (News.Item it : items) {
+            int sc = Math.max(0, 10 - idx++);
+            if (it.date > seenBefore && seenBefore > 0) sc += 50;
+            String t = (it.title == null ? "" : it.title).toLowerCase();
+            if (t.contains("rules") || t.contains("правил")) sc += 40;
+            if (t.contains("errata") || t.contains("faq")) sc += 40;
+            if (t.contains("vanguard")) sc += 30;
+            if (t.contains("points") || t.contains("balance") || t.contains("update")) sc += 20;
+            if (t.contains("reveal") || t.contains("preview") || t.contains("new ")) sc += 10;
+            if (sc > bs) { bs = sc; best = it; }
+        }
+        return best;
     }
 
     View card(final News.Item it, boolean big, SimpleDateFormat df) {
