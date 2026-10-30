@@ -36,6 +36,7 @@ final class Missions {
         String name, ru, desc;
         String pack = "Основные миссии";
         String book, map, note; // книга для 📖, своя карта развёртывания, особенности подготовки
+        String mapId;           // идентификатор схемы развёртывания для MapView (warofgods, giantkiller, line, breakthrough, dawn, ignis, firstwave)
         int page = -1;          // страница в PDF (с 0)
         int turns = 4;
         boolean asym;           // есть Атакующий и Защитник
@@ -123,7 +124,8 @@ final class Missions {
         a.ru = "Война богов";
         a.desc = "Два Легио Титаникус сходятся в бою: каждый выставляет Titan Maniple Detachment вместо Primary, остальные очки — на союзников. Три маркера по 2 ПО, очки за сбитых Титанов и стратегические цели.";
         a.book = "questoris"; a.page = 91;
-        a.map = "Своя карта миссии: зоны развёртывания сторон A и B (см. книгу).";
+        a.map = "Зоны сторон A и B: полосы 12″ вдоль длинных краёв стола 72″×48″. Три маркера по 2 ПО — на центральной линии.";
+        a.mapId = "warofgods";
         a.note = "Бросок кубика за миссию: 1–3 War of Gods, 4–6 Giant Killer. 3000 очков. Титаны не идут в резерв и выставляются до остальной армии. Если Титаны есть у обоих — первым ходит тот, кто первым развернулся.";
         for (int i = 1; i <= 3; i++) a.objectives.add(new Objective("Маркер " + i, 2, false));
         a.secondaries.add(last(3)); a.secondaries.add(first(1));
@@ -138,7 +140,8 @@ final class Missions {
         b.desc = "Одинокий боевой Титан Защитника рвётся вперёд, Атакующий должен его свалить. Маркеры (3, 2, 2) и Engine Kill набирает только Атакующий, стратегические цели — только Защитник.";
         b.book = "questoris"; b.page = 92;
         b.asym = true; b.objAttacker = true;
-        b.map = "Своя карта: Атакующий — в 24\" от своего короткого края, Защитник — в 24\" от своего; Титаны Защитника — в 12\" от его края.";
+        b.map = "Стол 72″×48″. Атакующий — полоса 24″ от своего короткого края, Защитник — 24″ от своего; Титаны Защитника — в 12″ от его края.";
+        b.mapId = "giantkiller";
         b.note = "Защитник берёт Titan Maniple Detachment вместо Primary, Атакующий — обычную армию. Атакующий всегда ходит первым.";
         b.objectives.add(new Objective("Маркер «3»", 3, false));
         b.objectives.add(new Objective("Маркер «2» А", 2, false));
@@ -169,7 +172,8 @@ final class Missions {
         a.ru = "Наступление по линии";
         a.desc = "Атакующий продавливает вражескую линию: четыре маркера по 1 ПО продвигаются к краю Защитника и дорожают до 3.";
         a.page = 42;
-        a.map = "Своя карта: сетка 4×4 сектора, маркеры в центрах секторов, зоны у длинных краёв (48\").";
+        a.map = "Стол 72″×48″, сетка 4×4 сектора по 18″×12″. Зоны — полосы 12″ у длинных краёв. Маркеры — в центрах четырёх секторов третьего ряда от Защитника, продвигаются к его краю.";
+        a.mapId = "line";
         a.rules.add("Advancing Objectives"); a.rules.add("Battlefield Assets"); a.rules.add("Reserves"); a.rules.add("Seize the Initiative"); a.rules.add("Sudden Death");
         l.add(a);
 
@@ -179,7 +183,8 @@ final class Missions {
         b.ru = "Прорыв";
         b.desc = "Атакующий продвигает центральные маркеры, остерегаясь окружения: резервы Защитника выходят и с коротких краёв.";
         b.page = 43;
-        b.map = "Своя карта: сетка 4×4 сектора, стол 72\"×48\", маркеры в центре.";
+        b.map = "Стол 72″×48″, сетка 4×4. Маркеры буквой U: два в половине Защитника, два в половине Атакующего. Резервы Защитника входят и с коротких краёв.";
+        b.mapId = "breakthrough";
         b.rules.add("Advancing Objectives"); b.rules.add("Battlefield Assets"); b.rules.add("Reserves"); b.rules.add("Seize the Initiative"); b.rules.add("Encircling Reinforcements"); b.rules.add("Sudden Death");
         l.add(b);
 
@@ -189,7 +194,8 @@ final class Missions {
         c.ru = "Рассветный налёт";
         c.desc = "Удар на рассвете: Защитник развёртывается первым без броска, Атакующий может перехватить первый ход на 4+, а весь первый ход стрельба только Snap Shots.";
         c.page = 44;
-        c.map = "Своя карта: сетка 4×4 сектора, стол 72\"×48\".";
+        c.map = "Стол 72″×48″, сетка 4×4. Зоны в противоположных углах по 36″×24″. Один маркер — внутри зоны Защитника, остальные — по диагонали.";
+        c.mapId = "dawn";
         c.rules.add("Advancing Objectives"); c.rules.add("Battlefield Assets"); c.rules.add("Reserves"); c.rules.add("Surprise Attack"); c.rules.add("Sudden Death");
         l.add(c);
         return l;
@@ -204,7 +210,8 @@ final class Missions {
         a.desc = "Isstvan V: Саламандры во главе с сатурнинскими терминаторами штурмуют позиции Гвардии Смерти. Центральный маркер 3 ПО и два по 2 ПО.";
         a.book = "saturn"; a.page = 33;
         a.asym = true; a.extraTurn = true;
-        a.map = "Своя карта: край Защитника и край Атакующего, у Атакующего два сектора Spearhead.";
+        a.map = "Зоны у длинных краёв по 12″. В зоне Атакующего — два сектора Spearhead для сатурнинской волны (выходят из резерва в 1-й ход). В половине Защитника — укрепления.";
+        a.mapId = "ignis";
         a.note = "Атакующий — Loyalist, Защитник — Traitor. Защитник развёртывается первым, Атакующий ходит первым. В половине Защитника — укрепления и окопы, у Атакующего — открытое поле с обломками. После 4-го хода Защитник бросает D6: на 4+ играется 5-й ход.";
         a.objectives.add(new Objective("Центр", 3, false));
         a.objectives.add(new Objective("Маркер «2» А", 2, false));
@@ -220,7 +227,8 @@ final class Missions {
         b.desc = "Isstvan V: авангард лоялистов высаживается на плацдарм. Атакующий захватывает четыре маркера по 2 ПО, Защитник получает 2 ПО за каждый уничтоженный юнит.";
         b.book = "isstvan"; b.page = 33;
         b.asym = true; b.objAttacker = true;
-        b.map = "Своя карта: зона Защитника у дальнего края, у Атакующего две зоны (1 и 2) у своего края, стол 72\"×48\".";
+        b.map = "Стол 72″×48″. Зона Защитника 12″ у дальнего края. У Атакующего две зоны у своего края: 1 — пехота, 2 — техника (Waves of Attackers).";
+        b.mapId = "firstwave";
         b.note = "Атакующий — Loyalist, Защитник — Traitor. На шаге развёртывания Защитник автоматически выигрывает бросок. Используются Battlefield Assets.";
         for (int i = 1; i <= 4; i++) b.objectives.add(new Objective("Плацдарм " + i, 2, false));
         b.secondaries.add(slay(4)); b.secondaries.add(giant(2)); b.secondaries.add(last(4)); b.secondaries.add(first(3));
