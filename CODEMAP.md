@@ -80,3 +80,4 @@
 - Иконки фракций: `Theme.iconFor` (ключи da/ec/iw/…), `Glyph.drawFaction` (свои векторные знаки), `Ui.Hex` рисует иконку вместо «shield» и без symbol/label.
 - Варп-тема: `Eggs.startVeil/stopVeil` (щупальца, глаза, глитчи, шёпоты), звуки `Sfx`: `warp_drone` (петля `Sfx.loop`), `warp_whisper`, `warp_glitch`.
 - Сборка без SDK на этой машине: `tools/tools-build.sh` (build-tools r34 + android.jar + JDK17 в `tools/`; d8 вместо dx).
+- Smart, багфикс 4.21: свободный режим (`Params.mode == 2`) — флаг `freeMode` в `build()` и `improve()`: коллекция даёт кандидатов, но не бонус (`value()`), лимит новых юнитов 30% снят; «ответный кулак» против стрелковых армий (`needs()`: Solar Auxilia w[4]=0.7, trait shoot +w[4], текст-объяснение) и множитель в `value()` (быстрые/элитные рукопашники ×1.3); фирменные юниты без урезания 0.9 при открытии aux-детачмента (bestAux k = signature ? 1.0 : 0.9).

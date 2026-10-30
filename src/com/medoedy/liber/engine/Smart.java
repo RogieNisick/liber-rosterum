@@ -217,6 +217,7 @@ public final class Smart {
     boolean physical;
     boolean ownedPhase;
     boolean relaxNew; // при реальной коллекции сначала ставим сами миниатюры, прокси — только из оставшихся
+    boolean freeMode; // «Свободно» (mode 2): коллекция не даёт преимущества — выбор чисто по силе против врага
     List<Mini> minis;
     String curCat;
 
@@ -420,18 +421,18 @@ public final class Smart {
         String n = enemyName == null ? "" : enemyName.toLowerCase();
         if (n.contains("titanicus") || n.contains("questoris") || n.contains("knight")) { w[0] = 3; w[1] = 0.3; w[2] = 0.4; why.add("Противник — богомашины и рыцари: главное — тяжёлое противотанковое оружие (мелта, лазпушки, D3+)."); }
         else if (n.contains("mechanicum")) { w[0] = 2; w[2] = 1.3; w[1] = 0.7; why.add("Механикум выставляет автоматоны и технику: нужны пробивающее и противотанковое оружие."); }
-        else if (n.contains("solar auxilia")) { w[0] = 1.8; w[1] = 1.4; why.add("Солар Ауксилия — много бронетехники и плотная пехота: держите баланс противотанка и огня по пехоте."); }
+        else if (n.contains("solar auxilia")) { w[0] = 1.8; w[1] = 1.4; w[4] = 0.7; why.add("Солар Ауксилия — много бронетехники, плотная пехота и линии огня: держим баланс противотанка, огня по пехоте и своего ответного удара."); }
         else if (n.contains("militia")) { w[1] = 2.2; w[0] = 0.8; w[2] = 0.4; why.add("Ополчение берёт числом: нужны шаблоны, взрывы и много выстрелов."); }
         else if (n.contains("custodes")) { w[2] = 2.4; w[1] = 0.4; w[3] = 1.2; why.add("Кустодии — малочисленная элита в лучших доспехах: нужны AP2 и урон D2+."); }
         else if (n.contains("daemon")) { w[2] = 1.6; w[4] = 0.9; why.add("Демоны сильны в рукопашной и стойки к обычному оружию: нужны AP и свой ближний бой."); }
         else if (n.contains("world eaters") || n.contains("space wolves") || n.contains("blood angels") || n.contains("white scars")) { w[3] = 1.3; w[1] = 1.3; w[4] = 1.0; why.add("Легион силён в натиске и ближнем бою: нужны живучесть, плотный огонь и контрудар."); }
-        else if (n.contains("iron warriors") || n.contains("imperial fists") || n.contains("iron hands") || n.contains("death guard")) { w[0] = 1.6; w[2] = 1.4; why.add("Легион любит технику и прочную пехоту: нужно больше противотанка и AP2-3."); }
+        else if (n.contains("iron warriors") || n.contains("imperial fists") || n.contains("iron hands") || n.contains("death guard")) { w[0] = 1.6; w[2] = 1.4; w[4] += 0.3; why.add("Легион любит технику, прочную пехоту и стрельбу: нужно больше противотанка, AP2-3 и своего рукопашного ответа, чтобы сблизиться."); }
         else if (n.contains("legion") || n.contains(" - ") || n.contains("blackshields") || n.contains("shattered")) { w[2] = 1.4; w[0] = 1.2; why.add("Легионы Астартес — пехота в силовой броне и техника: в цене AP3 и универсальное оружие."); }
         if (traits.contains("armour")) { w[0] += 1.2; why.add("Вы отметили: много техники — добавлен противотанк."); }
         if (traits.contains("horde")) { w[1] += 1.2; why.add("Вы отметили: орда — добавлен огонь по пехоте."); }
         if (traits.contains("elite")) { w[2] += 1.2; why.add("Вы отметили: элита и терминаторы — больше AP2."); }
         if (traits.contains("melee")) { w[3] += 0.6; w[1] += 0.4; w[4] += 0.4; why.add("Вы отметили: рукопашники — больше живучести и огня на подходе."); }
-        if (traits.contains("shoot")) { w[3] += 0.6; w[5] += 0.6; why.add("Вы отметили: стрелковая армия — живучесть и скорость, чтобы сблизиться."); }
+        if (traits.contains("shoot")) { w[3] += 0.6; w[4] += 0.9; w[5] += 0.8; why.add("Вы отметили: стрелковая армия — кроме живучести нужен ответный удар: быстрые и элитные рукопашники (джамперы, Риверы, терминаторы), которые доберутся до её линий."); }
         if (traits.contains("fast")) { w[1] += 0.4; w[5] += 0.4; why.add("Вы отметили: быстрая армия — больше выстрелов и своя мобильность."); }
         return w;
     }
@@ -639,6 +640,7 @@ public final class Smart {
         rnd = new Random(p.seed);
         excl = p.exclude == null ? new HashSet<String>() : p.exclude;
         maxSame = p.maxSame;
+        freeMode = p.mode == 2; // до того, как scratch-ветка перезапишет p.mode
         limit = p.limit;
         proxyPts = 0;
         newPts = 0;
@@ -665,6 +667,7 @@ public final class Smart {
                 for (String[] st : STYLES) if (style.contains(st[0])) { if (sb.length() > 0) sb.append(", "); sb.append(st[1].toLowerCase()); }
                 res.reasons.add("Ваших ростеров этой фракции нет — собираю армию с нуля" + (sb.length() > 0 ? " в характере: " + sb + "." : ", сбалансированно."));
             }
+            if (freeMode && !scratch) res.reasons.add("Режим «Свободно»: миниатюры и ростеры дают список кандидатов, но преимущества не дают — выбор строго по силе против врага.");
             Data.Cat ec = p.enemyCat == null ? null : d.cats.get(p.enemyCat);
             res.need = enemyNeeds(all, p, res.reasons);
             mission = p.mission;
@@ -717,13 +720,14 @@ public final class Smart {
                     if (!ok(c) || c.pts > left || c.pts <= 0) continue;
                     // новые и прокси — аккуратно: не больше трети армии
                     if (c.status == PROXY && proxyPts + c.pts > limit * 0.35) continue;
-                    if (c.status == NEW && !scratch && !relaxNew && newPts + c.pts > limit * 0.3) continue;
+                    if (c.status == NEW && !scratch && !freeMode && !relaxNew && newPts + c.pts > limit * 0.3) continue;
                     Force f = forceWithRoom(forces, c);
                     double sc = value(c) * (0.9 + rnd.nextDouble() * 0.2);
                     if (f == null) {
                         // свой юнит, которому нужен ещё не открытый вспомогательный детачмент (Юстаэрины, Риверы…) —
                         // соревнуется на равных, а не ждёт, пока кончатся очки
-                        if (c.status == OWNED && c.det != null && sc * 0.9 > bsAux) { bsAux = sc * 0.9; bestAux = c; }
+                        double k = c.signature ? 1.0 : 0.9;
+                        if (c.status == OWNED && c.det != null && sc * k > bsAux) { bsAux = sc * k; bestAux = c; }
                         continue;
                     }
                     if (sc > bs) { bs = sc; best = c; where = f; }
@@ -776,7 +780,7 @@ public final class Smart {
                     for (Cand c : mainCands) {
                         if (!ok(c) || c.pts > left || c.pts <= 0) continue;
                         if (c.status == PROXY && proxyPts + c.pts > limit * 0.35) continue;
-                        if (c.status == NEW && !scratch && !relaxNew && newPts + c.pts > limit * 0.3) continue;
+                        if (c.status == NEW && !scratch && !freeMode && !relaxNew && newPts + c.pts > limit * 0.3) continue;
                         Force f = forceWithRoom(forces, c);
                         if (f == null) continue;
                         double sc = value(c) * (0.9 + rnd.nextDouble() * 0.2);
@@ -1632,7 +1636,7 @@ public final class Smart {
             double sat = 1 + haveEq / Math.max(150, limit / 5);
             v += res.need[i] * gain / sat;
         }
-        double own = scratch ? 1 : c.status == OWNED ? 2.2 + 0.2 * Math.min(3, c.own.rosters) : c.status == PROXY ? 1.0 : 0.6;
+        double own = scratch || freeMode ? 1 : c.status == OWNED ? 2.2 + 0.2 * Math.min(3, c.own.rosters) : c.status == PROXY ? 1.0 : 0.6;
         Integer inSlot = usedBySlot.get(c.node.place == null ? "" : c.node.place);
         double variety = Math.pow(0.72, inSlot == null ? 0 : inSlot); // разнообразие: штраф за однотипные выборы
         double logic = 1;
@@ -1663,6 +1667,12 @@ public final class Smart {
         if (c.slotName != null && (c.slotName.startsWith("Command") || c.slotName.equalsIgnoreCase("HQ")) && inSlot != null && inSlot >= 1) logic *= 0.5;
         // одинаковые юниты подряд — всё меньше отдачи
         if (usedOf(c) >= 2) logic *= 0.6;
+        // «ответный кулак» против стрелковой армии: ценим рукопашников, которые реально доберутся
+        // (скорость или элитная броня), и принижаем медленную «мясную» рукопашь — она не дойдёт
+        if (res.need[4] >= 1.0 && c.cap != null && c.cap.melee > 0) {
+            if (c.cap.speed > 0 || c.cap.ae > 0) logic *= 1.3;
+            else logic *= 0.9;
+        }
         return v * own * variety * logic / Math.max(40, c.pts) * (usedOf(c) > 0 ? 0.7 : 1);
     }
 
@@ -2270,6 +2280,7 @@ public final class Smart {
         res = new Result();
         rnd = new Random(p.seed);
         excl = p.exclude == null ? new HashSet<String>() : p.exclude;
+        freeMode = p.mode == 2; // «Улучши ростер» тоже работает по свободным правилам при выборе замен
         limit = target.limit > 0 ? target.limit : p.limit;
         usedById.clear();
         usedBySlot.clear();
