@@ -63,7 +63,7 @@ final class Voice {
                     public void onDone(String id) { rendered(id); }
                 });
                 ready = true;
-                if (pending != null) { String p = pending; pending = null; say(p); }
+                if (pending != null) { String p = pending; pending = null; speak(p, pendingSkull); }
             }
         });
     }
@@ -114,22 +114,36 @@ final class Voice {
         } catch (Throwable ignored) { }
     }
 
-    static void say(String text) {
+    static void say(String text) { speak(text, false); }
+
+    /** Речь сервочерепа: быстрый «робо-диктор» (~1,5×) с лёгкой механической окраской. */
+    static void saySkull(String text) { speak(text, true); }
+
+    private static void speak(String text, boolean skull) {
         if (!on || text == null) return;
-        if (!ready) { pending = text; return; }
+        if (!ready) { pending = text; pendingSkull = skull; return; }
         stop();
-        short[] pcm = cooked.get(text);
-        if (pcm != null) { play(pcm, rates.get(text)); return; }
-        final String id = "v" + (++seq) + "_" + Integer.toHexString(text.hashCode());
+        String key = skull ? "s:" + text : text;
+        short[] pcm = cooked.get(key);
+        if (pcm != null) { play(pcm, rates.get(key)); return; }
+        final String id = (skull ? "s" : "v") + (++seq) + "_" + Integer.toHexString(text.hashCode());
         File f = new File(cacheDir, id + ".wav");
         try {
+            if (skull) {
+                tts.setSpeechRate(1.5f);
+                tts.setPitch(1.06f);
+            } else {
+                tts.setSpeechRate(0.82f);
+                tts.setPitch(0.72f);
+            }
             Bundle b = new Bundle();
-            pendingText.put(id, text);
+            pendingText.put(id, skull ? "" + text : text);
             int r = tts.synthesizeToFile(text, b, f, id);
             if (r != TextToSpeech.SUCCESS) speakRaw(text);
         } catch (Throwable t) { speakRaw(text); }
     }
 
+    private static boolean pendingSkull;
     private static final Map<String, String> pendingText = new HashMap<String, String>();
 
     private static void speakRaw(String text) {
@@ -142,9 +156,12 @@ final class Voice {
 
     /** Синтез в файл закончен — обработать и проиграть (в фоне). */
     private static void rendered(final String id) {
-        final String text;
-        synchronized (pendingText) { text = pendingText.remove(id); }
-        if (text == null) return;
+        final String raw;
+        synchronized (pendingText) { raw = pendingText.remove(id); }
+        if (raw == null) return;
+        final boolean skull = raw.startsWith("");
+        final String text = skull ? raw.substring(1) : raw;
+        final String key = skull ? "" + text : text;
         final File f = new File(cacheDir, id + ".wav");
         new Thread(new Runnable() {
             public void run() {
@@ -153,10 +170,10 @@ final class Voice {
                     short[] raw = readWav(f, srOut);
                     f.delete();
                     if (raw == null || raw.length == 0) { speakRaw(text); return; }
-                    short[] pcm = voxCaster(raw, srOut[0]);
-                    cooked.put(text, pcm);
-                    rates.put(text, srOut[0]);
-                    if (id.startsWith("v" + seq + "_")) play(pcm, srOut[0]);
+                    short[] pcm = skull ? voxSkull(raw, srOut[0]) : voxCaster(raw, srOut[0]);
+                    cooked.put(key, pcm);
+                    rates.put(key, srOut[0]);
+                    if (id.substring(1).startsWith(String.valueOf(seq) + "_")) play(pcm, srOut[0]);
                 } catch (Throwable t) { speakRaw(text); }
             }
         }, "vox").start();
@@ -278,9 +295,44 @@ final class Voice {
         return out;
     }
 
-    static boolean working() { return ready && !failed; }
+    /** Голос сервочерепа: сухой «вокс» без соборного эха — лёгкий перегруз, кольцевая модуляция
+     *  (механический призвук), короткое эхо и подъём середины, чтобы речь резала, как по механизму. */
+    static short[] voxSkull(short[] in, int sr) {
+        int n = in.length;
+        float[] x = new float[n];
+        for (int i = 0; i < n; i++) x[i] = in[i] / 32768.0f;
+        // 1) высоковый фильтр — убрать низкий гул, оставить «радиотрубу»
+        float lp = 0;
+        for (int i = 0; i < n; i++) { lp += (x[i] - lp) * 0.12f; x[i] -= lp * 0.85f; }
+        // 2) кольцевая модуляция 33 Гц + второй голос 33*1.5 — «серво» окраска
+        double tau = Math.PI * 2;
+        for (int i = 0; i < n; i++) {
+            double t = i / (double) sr;
+            float m = (float) (0.86 + 0.10 * Math.sin(tau * 33 * t) + 0.04 * Math.sin(tau * 49.5 * t));
+            x[i] *= m;
+        }
+        // 3) перегруз с подъёмом середины
+        float lp2 = 0;
+        for (int i = 0; i < n; i++) {
+            lp2 += (x[i] - lp2) * 0.25f;
+            x[i] = (float) Math.tanh((x[i] * 1.15f + lp2 * 0.55f) * 2.1) * 0.8f;
+        }
+        // 4) короткое сухое эхо (40 и 73 мс), почти без хвоста
+        float[] y = new float[n];
+        System.arraycopy(x, 0, y, 0, n);
+        int[] d = {(int) (sr * 0.040), (int) (sr * 0.073)};
+        float[] g = {0.22f, 0.12f};
+        for (int k = 0; k < d.length; k++)
+            for (int i = d[k]; i < n; i++) y[i] += x[i - d[k]] * g[k];
+        float peak = 0.001f;
+        for (float v : y) peak = Math.max(peak, Math.abs(v));
+        short[] out = new short[n];
+        float gn = 0.9f / peak;
+        for (int i = 0; i < n; i++) out[i] = (short) (Math.max(-1f, Math.min(1f, y[i] * gn)) * 32767);
+        return out;
+    }
 
-    static void shutdown() {
+    static boolean working() { return ready && !failed; }    static void shutdown() {
         stop();
         if (tts != null) { tts.shutdown(); tts = null; ready = false; }
     }

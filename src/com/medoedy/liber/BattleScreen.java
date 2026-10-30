@@ -28,6 +28,11 @@ final class BattleScreen extends Screen {
 
     void changed() { b.save(a); rebuild(); }
 
+    static String fmtDur(long ms) {
+        long s = Math.max(0, ms / 1000);
+        return s / 3600 + ":" + String.format(java.util.Locale.US, "%02d:%02d", (s % 3600) / 60, s % 60);
+    }
+
     @Override
     void refresh() { rebuild(); }
 
@@ -80,6 +85,24 @@ final class BattleScreen extends Screen {
         next.setPadding(0, 0, 0, dp(3));
         turns.addView(next, Ui.lp(dp(44), dp(44)));
         c.addView(turns, Ui.lpm(-1, -2, 0, 0, 0, dp(6)));
+
+        // ---------- время боя: общее и на текущий ход, тикает каждую секунду
+        final TextView clock = Ui.text(a, "", 13, Theme.bodyBold, Ui.GOLD_DIM);
+        clock.setGravity(Gravity.CENTER);
+        clock.setPadding(0, dp(3), 0, dp(1));
+        c.addView(clock);
+        final Runnable[] tick = new Runnable[1];
+        tick[0] = new Runnable() {
+            public void run() {
+                if (clock.getParent() == null) return;
+                long now = System.currentTimeMillis();
+                clock.setText(b.finished
+                        ? "⏱ Битва длилась " + fmtDur(now - b.started)
+                        : "⏱ Бой: " + fmtDur(now - b.started) + "   ·   ход " + b.turn + ": " + fmtDur(now - b.turnStarted));
+                a.h.postDelayed(tick[0], 1000);
+            }
+        };
+        tick[0].run();
 
         // ---------- маркеры текущего хода
         c.addView(a.ribbonTitle("МАРКЕРЫ · ХОД " + b.turn, theme));
@@ -433,6 +456,7 @@ final class BattleScreen extends Screen {
             return;
         }
         b.turn++;
+        b.turnStarted = System.currentTimeMillis();
         Sfx.play("bell");
         Ui.haptic(Ui.DOUBLE);
         a.toast("Ход " + b.turn + ". " + b.names[0] + " " + b.total(0) + " : " + b.total(1) + " " + b.names[1]);
@@ -444,6 +468,7 @@ final class BattleScreen extends Screen {
         if (yes) {
             b.mission.turns++;
             b.turn++;
+            b.turnStarted = System.currentTimeMillis();
             a.toast(pre + "Битва продолжается: ход " + b.turn + ".");
             Sfx.play("bell");
             changed();

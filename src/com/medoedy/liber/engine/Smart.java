@@ -872,7 +872,7 @@ public final class Smart {
             for (int k = (int) s.count; k < s.min; k++) {
                 Cand best = bestFor(cands, det, s.categoryId, p.limit - e.rosterCost(d.pointsId), true);
                 if (best == null) break;
-                place(best, det, "обязательный слот союзника");
+                place(best, det, hqSlot(s) ? "командир союзника — обязателен для детачмента (HQ)" : "обязательный слот союзника");
             }
         }
         // доп. детачменты союзника: как в ростере игрока, и те, что требуют правила (у Mechanicum — Logistical Benefits)
@@ -896,6 +896,9 @@ public final class Smart {
             }
         }
         List<Cand> allCands = new ArrayList<Cand>(cands);
+        // союзнику хватает 1–2 доп. детачментов: каждый тянет за собой обязательного командира (HQ) —
+        // без потолка союзник разрастается в стаю техно-жрецов ради слотов
+        final int[] auxCount = {0};
         if (DEBUG) for (Cand c : cands) System.err.println("ALLYC " + c.name + " st=" + c.status + " ok=" + ok(c) + " pts=" + c.pts + " det=" + (c.det == null ? "-" : c.det.name()) + " own=" + (c.own != null) + " left=" + (p.limit - e.rosterCost(d.pointsId)));
         for (int pass = 0; pass < 3; pass++) {
         allCands.addAll(extraCands);
@@ -919,8 +922,8 @@ public final class Smart {
                 if (sc > bs) { bs = sc; best = c; where = f; }
             }
             if (best == null) {
-                // не влезает в имеющиеся детачменты — откроем союзнику вспомогательный
-                if (addAuxiliary(cont, allCands, left)) continue;
+                // не влезает в имеющиеся детачменты — откроем союзнику вспомогательный (не больше двух)
+                if (auxCount[0] < 2 && addAuxiliary(cont, allCands, left)) { auxCount[0]++; continue; }
                 break;
             }
             place(best, where, "союзный детачмент");
@@ -956,6 +959,15 @@ public final class Smart {
         int got = res.picks.size() - picksBefore;
         if (got == 0 || det.sels.isEmpty()) { e.removeForce(cont); res.reasons.add("Союзник " + short_(cat.name) + ": не нашлось подходящих юнитов в пределах очков."); return; }
         res.reasons.add("Союзник " + short_(cat.name) + ": " + got + " " + (got == 1 ? "юнит" : "юнитов") + " на " + Engine.fmt(e.forceCost(cont, d.pointsId)) + " очков" + (allyScratch ? " (ваших ростеров этой фракции нет — подобрано с нуля)" : "") + ".");
+        // если командиров много — объясняем почему, чтобы «стаи техно-жрецов» не выглядели багом
+        int hq = 0, dets = 0;
+        for (Force f : cont.children) if (!f.sels.isEmpty()) dets++;
+        for (int pi = res.picks.size() - got; pi < res.picks.size(); pi++) {
+            String sl = res.picks.get(pi).slot;
+            if (sl != null && (sl.toLowerCase().contains("hq") || sl.toLowerCase().contains("command"))) hq++;
+        }
+        if (hq > 2) res.reasons.add("Командиров у союзника " + hq + ": по правилам каждый детачмент союзника обязан иметь своего HQ (" + dets + " " + (dets == 1 ? "детачмент" : "детачмента") + "), это не моя жадность. Поэтому я и ограничил союзника " + Math.min(2, auxCount[0]) + " доп. детачментами: иначе очки утекали бы в штабистов, а не в боевые юниты.");
+        else if (auxCount[0] > 0) res.reasons.add("Союзнику открыто доп. детачментов: " + auxCount[0] + " (потолок — 2). Каждый новый детачмент требует своего командира и съедает очки основной армии.");
     }
 
     /** Заполнить обязательные слоты дополнительного детачмента союзника. */
@@ -967,9 +979,14 @@ public final class Smart {
             for (int k = (int) sl.count; k < sl.min; k++) {
                 Cand best = bestFor(cs, nf, sl.categoryId, p.limit - e.rosterCost(d.pointsId), true);
                 if (best == null) break;
-                place(best, nf, "обязательный слот союзника");
+                place(best, nf, hqSlot(sl) ? "командир вспомогательного детачмента союзника — без него детачмент нельзя взять" : "обязательный слот союзника");
             }
         }
+    }
+
+    private static boolean hqSlot(CatSlot s) {
+        String n = s.name == null ? "" : s.name.toLowerCase();
+        return n.contains("hq") || n.contains("command");
     }
 
     private int tplPicks;
@@ -1642,8 +1659,10 @@ public final class Smart {
         logic *= styleBonus(c);
         // миссия на маркеры: пешие держатели точек (особенно с Line) ценнее
         logic *= holderBonus(c);
-        // командиров сверх необходимого — осторожно
-        if (c.slotName != null && c.slotName.startsWith("Command") && inSlot != null && inSlot >= 1) logic *= 0.6;
+        // командиров сверх необходимого — осторожно (слот называется «HQ» или «Command»)
+        if (c.slotName != null && (c.slotName.startsWith("Command") || c.slotName.equalsIgnoreCase("HQ")) && inSlot != null && inSlot >= 1) logic *= 0.5;
+        // одинаковые юниты подряд — всё меньше отдачи
+        if (usedOf(c) >= 2) logic *= 0.6;
         return v * own * variety * logic / Math.max(40, c.pts) * (usedOf(c) > 0 ? 0.7 : 1);
     }
 

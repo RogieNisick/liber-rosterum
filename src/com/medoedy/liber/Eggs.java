@@ -462,9 +462,15 @@ final class Eggs {
     }
 
     // ================================================================ тема Хаоса
+    private static View veil;
+
     static void applyChaos(MainActivity a) {
         boolean on = a.prefs.getBoolean("chaos", false);
-        if (!on) { a.root.setLayerType(View.LAYER_TYPE_NONE, null); return; }
+        if (!on) {
+            a.root.setLayerType(View.LAYER_TYPE_NONE, null);
+            stopVeil(a);
+            return;
+        }
         ColorMatrix m = hue(-125);
         ColorMatrix sat = new ColorMatrix();
         sat.setSaturation(1.25f);
@@ -472,6 +478,144 @@ final class Eggs {
         Paint p = new Paint();
         p.setColorFilter(new ColorMatrixColorFilter(m));
         a.root.setLayerType(View.LAYER_TYPE_HARDWARE, p);
+        startVeil(a);
+    }
+
+    /** Живая варп-вуаль: щупальца по краям, редкие глаза, шёпоты и глитчи реальности. */
+    private static void startVeil(final MainActivity a) {
+        if (veil != null && veil.getParent() != null) return;
+        final float density = a.getResources().getDisplayMetrics().density;
+        final int[] wh = {0, 0};
+        View v = new View(a) {
+            final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+            final Paint glow = new Paint(Paint.ANTI_ALIAS_FLAG);
+            final long t0 = android.os.SystemClock.uptimeMillis();
+            final int N = 7; // щупалец: нижние + боковые
+            final float[][] ten = new float[N][6]; // phase, speed, amp, width, edge(0 низ,1 лево,2 право), curl
+            { for (int i = 0; i < N; i++) { ten[i][0] = rnd.nextFloat() * 6.28f; ten[i][1] = 0.35f + rnd.nextFloat() * 0.5f; ten[i][2] = 0.7f + rnd.nextFloat() * 0.6f; ten[i][3] = 10 + rnd.nextFloat() * 14; ten[i][4] = i < 4 ? 0 : (i == 4 ? 1 : 2); ten[i][5] = rnd.nextFloat() * 6.28f; } }
+
+            @Override
+            protected void onDraw(Canvas c) {
+                int w = getWidth(), h = getHeight();
+                if (w == 0) return;
+                wh[0] = w; wh[1] = h;
+                float t = (android.os.SystemClock.uptimeMillis() - t0) / 1000f;
+                // дымка: пульсирующая фиолетовая тень по краям
+                float pulse = 0.05f + 0.025f * (float) Math.sin(t * 0.7);
+                p.setShader(new android.graphics.RadialGradient(w / 2f, h / 2f, Math.max(w, h) * 0.75f, 0x00000000, Color.argb((int) (255 * pulse * 3.2f), 40, 4, 58), android.graphics.Shader.TileMode.CLAMP));
+                c.drawRect(0, 0, w, h, p);
+                p.setShader(null);
+                // щупальца
+                for (int i = 0; i < N; i++) {
+                    float[] q = ten[i];
+                    float bx, by, dirx, diry;
+                    if (q[4] == 0) { bx = w * (0.12f + 0.76f * i / 3f); by = h + 8 * density; dirx = 0; diry = -1; }
+                    else if (q[4] == 1) { bx = -8 * density; by = h * (0.2f + 0.35f * (i - 4)); dirx = 1; diry = 0; }
+                    else { bx = w + 8 * density; by = h * (0.25f + 0.4f * (i - 5)); dirx = -1; diry = 0; }
+                    float len = Math.max(w, h) * (0.34f + 0.1f * (float) Math.sin(t * 0.23f + q[5]));
+                    int seg = 14;
+                    Path path = new Path();
+                    path.moveTo(bx, by);
+                    float px = bx, py = by;
+                    for (int k = 1; k <= seg; k++) {
+                        float u = k / (float) seg;
+                        float wave = (float) Math.sin(t * q[1] * 2.2f + q[0] + u * 4.2f) * q[2] * 30 * density * u
+                                   + (float) Math.sin(t * 0.6f + q[5] + u * 9f) * 8 * density * u;
+                        float nx = bx + dirx * len * u + (dirx == 0 ? wave : -diry * 0);
+                        float ny = by + diry * len * u + (diry == 0 ? wave : 0);
+                        if (dirx != 0) ny = by + diry * len * u + wave * 0.3f;
+                        else nx = bx + wave;
+                        path.quadTo(px + (nx - px) * 0.4f, py + (ny - py) * 0.4f, nx, ny);
+                        px = nx; py = ny;
+                    }
+                    p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeCap(Paint.Cap.ROUND);
+                    p.setStrokeWidth(q[3] * density);
+                    p.setColor(0x592A0A3C);
+                    c.drawPath(path, p);
+                    p.setStrokeWidth(q[3] * density * 0.45f);
+                    p.setColor(0x40B03AA0);
+                    c.drawPath(path, p);
+                    // присоски вдоль кончика
+                    p.setStyle(Paint.Style.FILL);
+                    for (int k = seg - 3; k <= seg; k++) {
+                        float u = k / (float) seg;
+                        float wave = (float) Math.sin(t * q[1] * 2.2f + q[0] + u * 4.2f) * q[2] * 30 * density * u;
+                        float nx = bx + dirx * len * u + (dirx == 0 ? wave : 0);
+                        float ny = by + diry * len * u + (diry == 0 ? wave * 0.3f : 0);
+                        p.setColor(0x4DA020B0);
+                        c.drawCircle(nx, ny, q[3] * density * 0.22f, p);
+                    }
+                }
+                // редкие глаза варпа: появляются, всматриваются, гаснут
+                for (int i = 0; i < 3; i++) {
+                    float cyc = (t * 0.11f + i * 0.37f) % 1f;
+                    if (cyc > 0.22f) continue;
+                    float k = cyc / 0.22f;
+                    float al = (float) Math.sin(k * Math.PI);
+                    float ex = w * (0.25f + 0.5f * ((i * 0.618f + 0.13f) % 1f));
+                    float ey = h * (0.2f + 0.5f * ((i * 0.414f + 0.31f) % 1f));
+                    float er = (10 + i * 4) * density;
+                    glow.setColor(Color.argb((int) (70 * al), 190, 40, 220));
+                    c.drawCircle(ex, ey, er * 2.4f, glow);
+                    p.setStyle(Paint.Style.FILL);
+                    p.setColor(Color.argb((int) (200 * al), 235, 220, 245));
+                    c.drawOval(new RectF(ex - er, ey - er * 0.55f, ex + er, ey + er * 0.55f), p);
+                    p.setColor(Color.argb((int) (255 * al), 30, 0, 40));
+                    c.drawCircle(ex, ey, er * 0.34f, p);
+                }
+                postInvalidateOnAnimation();
+            }
+        };
+        v.setClickable(false);
+        veil = v;
+        a.root.addView(v, new FrameLayout.LayoutParams(-1, -1));
+        // гул стартует, как только сэмпл догрузится (звуки синтезируются в фоне при запуске)
+        final Runnable[] retry = new Runnable[1];
+        retry[0] = new Runnable() {
+            public void run() {
+                if (veil == null || veil.getParent() == null) return;
+                Sfx.loop("warp_drone", 0.35f);
+                a.h.postDelayed(retry[0], 3000);
+            }
+        };
+        a.h.postDelayed(retry[0], 1200);
+        // шёпоты — редкие, из разных сторон
+        final Runnable whisper = new Runnable() {
+            public void run() {
+                if (veil == null || veil.getParent() == null) return;
+                if (a.prefs.getBoolean("chaos", false)) {
+                    Sfx.play("warp_whisper", 0.45f, 0.75f + rnd.nextFloat() * 0.5f);
+                    a.h.postDelayed(this, 9000 + rnd.nextInt(15000));
+                }
+            }
+        };
+        a.h.postDelayed(whisper, 7000);
+        // глитч реальности: рывок экрана и обрыв звука
+        final Runnable glitch = new Runnable() {
+            public void run() {
+                if (veil == null || veil.getParent() == null) return;
+                if (a.prefs.getBoolean("chaos", false)) {
+                    Sfx.play("warp_glitch", 0.55f, 0.9f + rnd.nextFloat() * 0.3f);
+                    final View st = a.stage;
+                    if (st != null) {
+                        st.animate().translationX((rnd.nextFloat() - 0.5f) * dp(12)).translationY((rnd.nextFloat() - 0.5f) * dp(8)).setDuration(60).withEndAction(new Runnable() {
+                            public void run() { st.animate().translationX((rnd.nextFloat() - 0.5f) * dp(8)).translationY(0).setDuration(50).withEndAction(new Runnable() {
+                                public void run() { st.setTranslationX(0); st.setTranslationY(0); }
+                            }).start(); }
+                        }).start();
+                    }
+                    a.h.postDelayed(this, 14000 + rnd.nextInt(18000));
+                }
+            }
+        };
+        a.h.postDelayed(glitch, 16000);
+    }
+
+    private static void stopVeil(MainActivity a) {
+        if (veil != null && veil.getParent() != null) ((ViewGroup) veil.getParent()).removeView(veil);
+        veil = null;
+        Sfx.loopStop();
     }
 
     static ColorMatrix hue(float deg) {
@@ -501,6 +645,7 @@ final class Eggs {
             }
         });
         Sfx.play(on ? "organ" : "choir", 1f, on ? 0.6f : 1f);
+        if (on) Sfx.play("warp_glitch", 0.7f, 0.8f);
         Ui.haptic(Ui.HEAVY);
         a.h.postDelayed(new Runnable() {
             public void run() {
@@ -549,6 +694,7 @@ final class Eggs {
                         hx.animate().scaleX(1.18f).scaleY(1.18f).setDuration(500).withEndAction(new Runnable() { public void run() { hx.animate().scaleX(1f).scaleY(1f).setDuration(900).start(); } }).start();
                         String l = LITANY[rnd.nextInt(LITANY.length)];
                         if (l.endsWith(", ")) l += Guide.name(a) + ".";
+                        Voice.saySkull(l);
                         if (say != null) {
                             say.setText(l);
                             say.setAlpha(1f);

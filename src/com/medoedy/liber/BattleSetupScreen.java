@@ -315,6 +315,8 @@ final class BattleSetupScreen extends Screen {
         b.factions = factions.clone();
         b.first = first < 0 ? 0 : first;
         b.init();
+        b.started = System.currentTimeMillis();
+        b.turnStarted = b.started;
         b.save(a);
         Sfx.play("gong");
         Ui.haptic(Ui.HEAVY);

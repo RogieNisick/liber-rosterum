@@ -180,6 +180,7 @@ final class Guide {
         final Step s = steps.get(k);
         Sfx.play("servo", 0.7f, 0.9f + (k % 3) * 0.1f);
         Ui.haptic(Ui.TICK);
+        Voice.saySkull(s.text);
         counter.setText(steps.size() > 1 ? (k + 1) + " / " + steps.size() : "");
         // печатаем текст, как когитатор
         if (typing[0] != null) a.h.removeCallbacks(typing[0]);

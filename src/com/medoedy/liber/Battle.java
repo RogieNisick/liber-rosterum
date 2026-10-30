@@ -26,6 +26,7 @@ final class Battle {
     int attacker = 0;                    // для асимметричных миссий
     int[] pick;                          // Advancing Objectives: какой маркер засчитан в ходу (-1 — никакой)
     long started = System.currentTimeMillis();
+    long turnStarted = System.currentTimeMillis();
 
     int maxTurns() { return mission.turns + (mission.extraTurn ? 1 : 0); }
 
@@ -130,6 +131,7 @@ final class Battle {
         m.put("factions", list(factions));
         m.put("first", (double) first);
         m.put("started", (double) started);
+        m.put("turnStarted", (double) turnStarted);
         List<Object> c = new ArrayList<Object>();
         for (int[] row : control) c.add(ints(row));
         m.put("control", c);
@@ -159,6 +161,7 @@ final class Battle {
         b.finished = Data.bool(m, "finished");
         b.first = (int) Data.num(m, "first", 0);
         b.started = (long) Data.num(m, "started", 0);
+        b.turnStarted = (long) Data.num(m, "turnStarted", b.started);
         List<Object> n = (List<Object>) m.get("names"), f = (List<Object>) m.get("factions");
         for (int i = 0; i < 2; i++) { b.names[i] = String.valueOf(n.get(i)); b.factions[i] = String.valueOf(f.get(i)); }
         b.init();

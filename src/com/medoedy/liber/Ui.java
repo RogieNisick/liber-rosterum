@@ -962,7 +962,10 @@ final class Ui {
                 c.drawBitmap(photo, m, p);
                 c.restore();
             } else if (symbol != null) {
-                Glyph.draw(c, symbol, cx, cy, r * 0.62f, dark ? Theme.mix(PHOS, theme.accentBright(), 0.3f) : Theme.mix(theme.trim, Color.WHITE, 0.25f));
+                if ("shield".equals(symbol) && theme.icon != null) Glyph.drawFaction(c, theme.icon, cx, cy, r * 0.62f, dark ? Theme.mix(PHOS, theme.accentBright(), 0.3f) : Theme.mix(theme.trim, Color.WHITE, 0.25f));
+                else Glyph.draw(c, symbol, cx, cy, r * 0.62f, dark ? Theme.mix(PHOS, theme.accentBright(), 0.3f) : Theme.mix(theme.trim, Color.WHITE, 0.25f));
+            } else if (theme.icon != null) {
+                Glyph.drawFaction(c, theme.icon, cx, cy, r * 0.62f, dark ? Theme.mix(PHOS, theme.accentBright(), 0.3f) : Theme.mix(theme.trim, Color.WHITE, 0.25f));
             }
             if (label != null) {
                 p.setTypeface(Theme.namesBlack);

@@ -10,6 +10,8 @@ final class Theme {
     final int trim;       // отделка (металл)
     final int glow;       // цвет подсветки фона
     final String numeral; // номер легиона для водяного знака
+    /** Ключ стилизованной иконки фракции (Glyph.drawFaction) или null. */
+    String icon;
 
     static Typeface display, names, namesBlack, body, bodyBold;
 
@@ -40,6 +42,50 @@ final class Theme {
 
     /** Подбор геральдики по имени каталога. */
     static Theme forName(String name) {
+        Theme t = forNameRaw(name);
+        t.icon = iconFor(name);
+        return t;
+    }
+
+    /** Стилизованная узнаваемая иконка фракции (собственные векторные вариации, не официальные знаки). */
+    static String iconFor(String name) {
+        if (name == null) return null;
+        String n = name.toLowerCase();
+        if (n.contains("dark angels")) return "da";
+        if (n.contains("emperor's children") || n.contains("emperor’s children")) return "ec";
+        if (n.contains("iron warriors")) return "iw";
+        if (n.contains("white scars")) return "ws";
+        if (n.contains("space wolves")) return "sw";
+        if (n.contains("imperial fists")) return "if";
+        if (n.contains("night lords")) return "nl";
+        if (n.contains("blood angels")) return "ba";
+        if (n.contains("iron hands")) return "ih";
+        if (n.contains("world eaters")) return "we";
+        if (n.contains("ultramarines")) return "um";
+        if (n.contains("death guard")) return "dg";
+        if (n.contains("thousand sons")) return "ts";
+        if (n.contains("sons of horus")) return "soh";
+        if (n.contains("word bearers")) return "wb";
+        if (n.contains("salamanders")) return "sal";
+        if (n.contains("raven guard")) return "rg";
+        if (n.contains("alpha legion")) return "al";
+        if (n.contains("blackshields")) return "bs";
+        if (n.contains("shattered")) return "sl";
+        if (n.contains("solar auxilia")) return "sa";
+        if (n.contains("custodes")) return "cust";
+        if (n.contains("mechanicum")) return "mech";
+        if (n.contains("skitarii")) return "skit";
+        if (n.contains("titanicus")) return "tit";
+        if (n.contains("questoris")) return "qst";
+        if (n.contains("militia")) return "mil";
+        if (n.contains("daemon")) return "dn";
+        if (n.contains("assassin")) return "as";
+        if (n.contains("psykana")) return "psy";
+        if (n.contains("knights-errant")) return "ke";
+        return null;
+    }
+
+    private static Theme forNameRaw(String name) {
         if (name == null) return DEFAULT;
         String n = name.toLowerCase();
         String num = "";

@@ -23,7 +23,7 @@ final class Sfx {
     private static final Random R = new Random(31);
     static final String[] ALL = {"click", "clunk", "page", "bell", "gong", "seal", "organ", "choir", "burn", "error", "servo", "tick", "dice", "fanfare",
             "w_bolt", "w_las", "w_plasma", "w_melta", "w_flame", "w_chain", "w_power", "w_hammer", "w_auto", "w_missile", "w_volkite", "w_grenade", "w_blade",
-            "gate_close", "gate_open", "hum"};
+            "gate_close", "gate_open", "hum", "warp_drone", "warp_whisper", "warp_glitch"};
 
     private static SoundPool pool;
     private static final Map<String, Integer> ids = new HashMap<String, Integer>();
@@ -64,6 +64,21 @@ final class Sfx {
         Integer id;
         synchronized (ids) { id = ids.get(n); }
         if (id != null && loaded.contains(id)) pool.play(id, vol, vol, 1, 0, rate);
+    }
+
+    private static int loopId;
+
+    /** Зациклить звук (например, варп-гул). Повторный вызов не дублирует петлю. */
+    static void loop(String n, float vol) {
+        if (!on || pool == null) return;
+        if (loopId != 0) return;
+        Integer id;
+        synchronized (ids) { id = ids.get(n); }
+        if (id != null && loaded.contains(id)) loopId = pool.play(id, vol, vol, 1, -1, 1f);
+    }
+
+    static void loopStop() {
+        if (pool != null && loopId != 0) { try { pool.stop(loopId); } catch (Throwable ignored) { } loopId = 0; }
     }
 
     /** Звук оружия по названию (или null, если это не оружие). */
@@ -470,6 +485,55 @@ final class Sfx {
                 for (int i = 0; i < b.length; i++) {
                     double t = i / (double) SR;
                     b[i] = (float) ((Math.sin(TAU * 60 * t) * 0.5 + Math.sin(TAU * 120 * t) * 0.3 + Math.sin(TAU * 180 * t) * 0.1) * Math.sin(Math.PI * t / 0.6));
+                }
+                return b;
+            }
+            case "warp_drone": { // варп-гул: расстроенные низы, медленное дыхание, безличный хор
+                float[] b = buf(7.0);
+                double[] f = {55, 55.8, 82.4, 110.5, 164.9};
+                double[] a = {0.5, 0.42, 0.3, 0.18, 0.08};
+                double y = 0;
+                BP air = new BP(900, 0.6);
+                for (int i = 0; i < b.length; i++) {
+                    double t = i / (double) SR, v = 0;
+                    for (int k = 0; k < f.length; k++)
+                        v += a[k] * Math.sin(TAU * f[k] * t * (1 + 0.004 * Math.sin(TAU * (0.11 + k * 0.037) * t)));
+                    y += 0.02 * (noise() * 0.5 - y);
+                    double breath = 0.75 + 0.25 * Math.sin(TAU * 0.14 * t);
+                    b[i] = (float) Math.tanh((v * breath + air.run(noise()) * 0.04) * 1.4) * 0.7f;
+                }
+                // стык петли: подмешаем начало в конец, чтобы зацикливалось без щелчка
+                int fade = SR / 2;
+                for (int i = 0; i < fade; i++) {
+                    float k = i / (float) fade;
+                    b[b.length - fade + i] = b[b.length - fade + i] * (1 - k * 0.5f) + b[i] * k * 0.5f;
+                }
+                return b;
+            }
+            case "warp_whisper": { // шёпот варпа: вдыхи-выдохи отфильтрованного шума, обратные атаки
+                float[] b = buf(3.2);
+                double y = 0;
+                BP f = new BP(1500, 2.2), f2 = new BP(2600, 3.5);
+                for (int i = 0; i < b.length; i++) {
+                    double t = i / (double) SR;
+                    y += 0.06 * (noise() - y);
+                    double env = Math.max(0, Math.sin(TAU * 0.9 * t + Math.sin(TAU * 0.23 * t) * 2)) * (0.4 + 0.6 * R.nextDouble());
+                    env *= c01(t / 0.5) * c01((3.2 - t) / 0.8);
+                    double form = f.run(y) * 1.6 + f2.run(y) * 0.8;
+                    b[i] = (float) (form * env * 1.8);
+                }
+                return b;
+            }
+            case "warp_glitch": { // глитч реальности: дёрганные импульсы и обрывы
+                float[] b = buf(0.5);
+                double ph = 0;
+                for (int i = 0; i < b.length; i++) {
+                    double t = i / (double) SR;
+                    double gate = (Math.sin(TAU * 37 * t) > -0.2 ? 1 : 0.1) * (Math.sin(TAU * 13 * t + 1) > -0.6 ? 1 : 0.2);
+                    ph += (180 + 700 * Math.abs(Math.sin(TAU * 3 * t))) / SR;
+                    double v = saw(ph) * 0.35 * gate + noise() * 0.12 * gate;
+                    v *= c01(t / 0.01) * c01((0.5 - t) / 0.12);
+                    b[i] = (float) (Math.tanh(v * 2.4) * 0.8);
                 }
                 return b;
             }

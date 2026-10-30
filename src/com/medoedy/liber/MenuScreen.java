@@ -207,7 +207,7 @@ final class MenuScreen extends Screen {
         say.setScaleX(0f);
         say.setScaleY(0f);
         say.animate().scaleX(1f).scaleY(1f).setStartDelay(1100).setDuration(380).setInterpolator(new OvershootInterpolator(2.2f)).withStartAction(new Runnable() {
-            public void run() { Sfx.play("servo", 0.6f, 1.25f); }
+            public void run() { Sfx.play("servo", 0.6f, 1.25f); Voice.saySkull(say.getText().toString()); }
         }).start();
         say.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { say.animate().alpha(0f).scaleX(0.8f).scaleY(0.8f).setDuration(160).start(); } });
         // ---- пасхалки
@@ -239,6 +239,7 @@ final class MenuScreen extends Screen {
             final View web = Eggs.cobwebs(a);
             f.addView(web, new FrameLayout.LayoutParams(-1, -1));
             say.setText(Guide.name(a) + "! Тебя не было " + days + " " + MainActivity.plural((int) days, "день", "дня", "дней") + ". Архив зарос паутиной… Сейчас приберусь.");
+            Voice.saySkull("Тебя не было " + days + " " + MainActivity.plural((int) days, "день", "дня", "дней") + ". Архив зарос паутиной. Сейчас приберусь.");
             a.h.postDelayed(new Runnable() {
                 public void run() {
                     Sfx.play("servo", 0.9f, 1.1f);
@@ -272,6 +273,7 @@ final class MenuScreen extends Screen {
                         public void run() { sk.animate().translationY(0).setDuration(500).setInterpolator(new OvershootInterpolator(2f)).start(); }
                     }).start();
                     pop(say, "А? Что?! Я не спал! Я… охранял архив. Глубокая ночь, " + Guide.name(a) + ", а ты всё ростеры собираешь.");
+                    Voice.saySkull("А? Что?! Я не спал! Я охранял архив. Глубокая ночь, а ты всё ростеры собираешь.");
                     return;
                 }
                 long now = android.os.SystemClock.uptimeMillis();
@@ -284,6 +286,7 @@ final class MenuScreen extends Screen {
                     Ui.haptic(Ui.HEAVY);
                     Eggs.incense(a, sk, 0xFF555555, 22);
                     pop(say, "01001000 01010110 01000001 01010100 01001001 01010100! Я не игрушка, " + Guide.name(a) + ". Улетаю.");
+                    Voice.saySkull("Я не игрушка. Улетаю.");
                     sk.animate().rotation(-25).setDuration(250).withEndAction(new Runnable() {
                         public void run() {
                             sk.animate().translationX(-dp(200)).translationY(-dp(40)).rotation(-60).setDuration(700).setStartDelay(900).withEndAction(new Runnable() {
@@ -294,7 +297,7 @@ final class MenuScreen extends Screen {
                                             sk.setRotation(0);
                                             sk.setTranslationY(0);
                                             sk.animate().translationX(0).setStartDelay(0).setDuration(1200).setInterpolator(new DecelerateInterpolator()).withEndAction(new Runnable() {
-                                                public void run() { away = false; pop(say, "Ладно, я вернулся. Но больше не тыкай."); Sfx.play("servo"); }
+                                                public void run() { away = false; pop(say, "Ладно, я вернулся. Но больше не тыкай."); Voice.saySkull("Ладно, я вернулся. Но больше не тыкай."); Sfx.play("servo"); }
                                             }).start();
                                         }
                                     }, 15000);
@@ -304,7 +307,9 @@ final class MenuScreen extends Screen {
                     }).start();
                     return;
                 }
-                pop(say, Guide.nextPhrase(a));
+                String p = Guide.nextPhrase(a);
+                pop(say, p);
+                Voice.saySkull(p);
                 Sfx.play("servo");
                 Ui.haptic(Ui.TICK);
                 v.animate().translationYBy(-dp(16)).rotationBy(12).setDuration(160).withEndAction(new Runnable() {

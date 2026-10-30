@@ -326,6 +326,307 @@ final class Glyph {
         }
     }
 
+    /** Иконки фракций: собственные стилизованные векторные знаки — узнаваемые, но не официальные изображения. */
+    static void drawFaction(Canvas c, String kind, float cx, float cy, float r, int color) {
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setShader(new LinearGradient(0, cy - r, 0, cy + r, Theme.mix(color, Color.WHITE, 0.3f), Theme.mix(color, Color.BLACK, 0.35f), Shader.TileMode.CLAMP));
+        Paint s = new Paint(Paint.ANTI_ALIAS_FLAG);
+        s.setStyle(Paint.Style.STROKE);
+        s.setStrokeWidth(Math.max(1.5f, r * 0.11f));
+        s.setStrokeCap(Paint.Cap.ROUND);
+        s.setStrokeJoin(Paint.Join.ROUND);
+        s.setColor(color);
+        Paint d = new Paint(Paint.ANTI_ALIAS_FLAG);
+        d.setColor(0xCC0E1311);
+        Path q = new Path();
+        switch (kind) {
+            case "da": { // Ангелы Тьмы: распахнутое крыло над вертикальным клинком
+                q.moveTo(cx, cy + r); q.lineTo(cx, cy - r * 0.5f); q.lineTo(cx + r * 0.1f, cy - r * 0.62f); q.lineTo(cx - r * 0.1f, cy - r * 0.62f); q.close();
+                c.drawPath(q, p);
+                for (int side = -1; side <= 1; side += 2) {
+                    Path w = new Path();
+                    w.moveTo(cx, cy - r * 0.1f);
+                    w.quadTo(cx + side * r * 0.8f, cy - r * 0.9f, cx + side * r, cy - r * 0.55f);
+                    w.quadTo(cx + side * r * 0.6f, cy - r * 0.4f, cx, cy + r * 0.15f);
+                    w.close();
+                    c.drawPath(w, p);
+                }
+                break;
+            }
+            case "ec": { // Дети Императора: птица-феникс в обращённом полумесяце
+                q.addArc(new RectF(cx - r, cy - r * 0.75f, cx + r, cy + r * 0.9f), 200, 140);
+                c.drawPath(q, s);
+                for (int i = -1; i <= 1; i++) {
+                    Path t = new Path();
+                    t.moveTo(cx + i * r * 0.28f, cy + r * 0.85f);
+                    t.quadTo(cx + i * r * 0.5f, cy + r * 0.25f, cx + i * r * 0.62f, cy - r * 0.15f);
+                    c.drawPath(t, s);
+                }
+                c.drawCircle(cx, cy - r * 0.1f, r * 0.2f, p);
+                break;
+            }
+            case "iw": { // Железные Воины: броневая башня со щелью и заклёпками
+                c.drawRoundRect(new RectF(cx - r * 0.85f, cy - r * 0.35f, cx + r * 0.85f, cy + r * 0.75f), r * 0.12f, r * 0.12f, p);
+                q.moveTo(cx - r * 0.5f, cy - r * 0.35f); q.lineTo(cx - r * 0.35f, cy - r * 0.8f); q.lineTo(cx + r * 0.35f, cy - r * 0.8f); q.lineTo(cx + r * 0.5f, cy - r * 0.35f); q.close();
+                c.drawPath(q, p);
+                d.setStrokeWidth(r * 0.1f);
+                c.drawLine(cx - r * 0.45f, cy - r * 0.05f, cx + r * 0.45f, cy - r * 0.05f, d);
+                for (int i = -2; i <= 2; i++) c.drawCircle(cx + i * r * 0.32f, cy + r * 0.4f, r * 0.07f, d);
+                break;
+            }
+            case "ws": { // Белые Шрамы: ударная молния на скаку
+                q.moveTo(cx + r * 0.15f, cy - r); q.lineTo(cx - r * 0.45f, cy + r * 0.1f); q.lineTo(cx - r * 0.02f, cy + r * 0.1f); q.lineTo(cx - r * 0.15f, cy + r); q.lineTo(cx + r * 0.45f, cy - r * 0.12f); q.lineTo(cx + r * 0.02f, cy - r * 0.12f); q.close();
+                c.drawPath(q, p);
+                c.drawLine(cx - r, cy + r * 0.55f, cx + r, cy + r * 0.55f, s);
+                break;
+            }
+            case "sw": { // Космические Волки: угловатая морда волка
+                q.moveTo(cx - r * 0.85f, cy - r * 0.6f); q.lineTo(cx - r * 0.3f, cy - r * 0.25f); q.lineTo(cx - r * 0.15f, cy - r * 0.85f);
+                q.lineTo(cx + r * 0.15f, cy - r * 0.85f); q.lineTo(cx + r * 0.3f, cy - r * 0.25f); q.lineTo(cx + r * 0.85f, cy - r * 0.6f);
+                q.lineTo(cx + r * 0.55f, cy + r * 0.2f); q.lineTo(cx + r * 0.2f, cy + r * 0.75f); q.lineTo(cx - r * 0.2f, cy + r * 0.75f); q.lineTo(cx - r * 0.55f, cy + r * 0.2f); q.close();
+                c.drawPath(q, p);
+                d.setStrokeWidth(r * 0.12f);
+                c.drawLine(cx - r * 0.3f, cy + r * 0.1f, cx - r * 0.05f, cy + r * 0.35f, d);
+                c.drawLine(cx + r * 0.3f, cy + r * 0.1f, cx + r * 0.05f, cy + r * 0.35f, d);
+                break;
+            }
+            case "if": // Имперские Кулаки: кулак (общий символ)
+                draw(c, "fist", cx, cy, r * 0.95f, color);
+                break;
+            case "nl": { // Ночные Властелины: пара кожистых крыльев с черепом
+                for (int side = -1; side <= 1; side += 2) {
+                    Path w = new Path();
+                    w.moveTo(cx, cy - r * 0.1f);
+                    w.quadTo(cx + side * r * 0.7f, cy - r * 1.05f, cx + side * r * 1.05f, cy - r * 0.5f);
+                    for (int k = 0; k < 3; k++) {
+                        float bx = cx + side * (r * (1.0f - k * 0.3f)), by = cy - r * (0.5f - k * 0.28f);
+                        w.lineTo(bx, by);
+                        w.lineTo(cx + side * r * (0.75f - k * 0.28f), by + r * 0.18f);
+                    }
+                    w.close();
+                    c.drawPath(w, p);
+                }
+                Ui.drawSkull(c, cx, cy + r * 0.45f, r * 0.42f, color);
+                break;
+            }
+            case "ba": { // Кровавые Ангелы: капля между двумя крыльями
+                q.moveTo(cx, cy - r * 0.9f); q.quadTo(cx + r * 0.5f, cy - r * 0.1f, cx, cy + r * 0.55f); q.quadTo(cx - r * 0.5f, cy - r * 0.1f, cx, cy - r * 0.9f); q.close();
+                c.drawPath(q, p);
+                for (int side = -1; side <= 1; side += 2) {
+                    Path w = new Path();
+                    w.moveTo(cx, cy - r * 0.3f); w.quadTo(cx + side * r * 0.9f, cy - r * 0.75f, cx + side * r, cy - r * 0.2f);
+                    w.quadTo(cx + side * r * 0.6f, cy + r * 0.1f, cx, cy + r * 0.3f); w.close();
+                    c.drawPath(w, p);
+                }
+                break;
+            }
+            case "ih": { // Железные Руки: шестерня с разломом
+                int teeth = 8;
+                for (int i = 0; i < teeth; i++) {
+                    double a = Math.PI * 2 * i / teeth;
+                    c.drawRect(cx + (float) Math.cos(a) * r * 0.75f - r * 0.09f, cy + (float) Math.sin(a) * r * 0.75f - r * 0.09f,
+                            cx + (float) Math.cos(a) * r * 0.75f + r * 0.09f, cy + (float) Math.sin(a) * r * 0.75f + r * 0.09f, p);
+                }
+                c.drawCircle(cx, cy, r * 0.62f, p);
+                d.setStrokeWidth(r * 0.16f);
+                c.drawLine(cx - r * 0.5f, cy - r * 0.5f, cx + r * 0.5f, cy + r * 0.5f, d);
+                c.drawLine(cx - r * 0.15f, cy + r * 0.45f, cx + r * 0.15f, cy + r * 0.75f, d);
+                break;
+            }
+            case "we": { // Пожиратели Миров: цепная секира
+                q.moveTo(cx - r * 0.15f, cy - r * 0.55f); q.quadTo(cx + r * 0.9f, cy - r * 0.95f, cx + r * 0.75f, cy + r * 0.05f);
+                q.quadTo(cx + r * 0.3f, cy - r * 0.1f, cx - r * 0.1f, cy + r * 0.05f); q.close();
+                c.drawPath(q, p);
+                s.setStrokeWidth(r * 0.14f);
+                for (int i = 0; i < 5; i++) c.drawLine(cx - r * 0.05f, cy - r * 0.55f + i * r * 0.3f, cx + r * 0.15f, cy - r * 0.4f + i * r * 0.3f, s);
+                c.drawRect(cx - r * 0.16f, cy - r * 0.55f, cx + r * 0.08f, cy + r * 0.95f, p);
+                break;
+            }
+            case "um": { // Ультрамарины: перевёрнутая омега
+                q.moveTo(cx - r * 0.8f, cy - r * 0.7f); q.quadTo(cx - r * 0.8f, cy + r * 0.55f, cx, cy + r * 0.55f);
+                q.quadTo(cx + r * 0.8f, cy + r * 0.55f, cx + r * 0.8f, cy - r * 0.7f);
+                s.setStrokeWidth(r * 0.28f);
+                c.drawPath(q, s);
+                break;
+            }
+            case "dg": { // Гвардия Смерти: три дуги вокруг точки (плотоядный триксель)
+                for (int i = 0; i < 3; i++) {
+                    double a0 = Math.PI * 2 * i / 3 - Math.PI / 2;
+                    float ox = cx + (float) Math.cos(a0) * r * 0.32f, oy = cy + (float) Math.sin(a0) * r * 0.32f;
+                    c.drawArc(new RectF(ox - r * 0.5f, oy - r * 0.5f, ox + r * 0.5f, oy + r * 0.5f), (float) Math.toDegrees(a0) + 40, 280, false, s);
+                }
+                c.drawCircle(cx, cy, r * 0.16f, p);
+                break;
+            }
+            case "ts": { // Тысяча Сынов: всевидящее око с лучами
+                draw(c, "eye", cx, cy, r * 0.8f, color);
+                s.setStrokeWidth(r * 0.09f);
+                for (int i = 0; i < 8; i++) {
+                    double a = Math.PI * i / 4;
+                    c.drawLine(cx + (float) Math.cos(a) * r * 0.72f, cy + (float) Math.sin(a) * r * 0.72f, cx + (float) Math.cos(a) * r, cy + (float) Math.sin(a) * r, s);
+                }
+                break;
+            }
+            case "soh": { // Сыновья Хоруса: серп-око (орбита + зрачок)
+                q.addArc(new RectF(cx - r * 0.8f, cy - r * 0.8f, cx + r * 0.8f, cy + r * 0.8f), -70, 290);
+                c.drawPath(q, s);
+                c.drawCircle(cx + r * 0.18f, cy - r * 0.05f, r * 0.22f, p);
+                q.reset(); q.moveTo(cx + r * 0.36f, cy + r * 0.1f); q.quadTo(cx + r * 0.75f, cy + r * 0.55f, cx + r * 0.1f, cy + r * 0.8f);
+                c.drawPath(q, s);
+                break;
+            }
+            case "wb": { // Носители Слова: раскрытая книга с пламенем
+                draw(c, "book", cx, cy + r * 0.18f, r * 0.8f, color);
+                q.moveTo(cx, cy - r * 0.25f); q.quadTo(cx - r * 0.3f, cy - r * 0.65f, cx, cy - r); q.quadTo(cx + r * 0.3f, cy - r * 0.65f, cx, cy - r * 0.25f); q.close();
+                c.drawPath(q, p);
+                break;
+            }
+            case "sal": { // Саламандры: кузнечное пламя с горной трещиной
+                q.moveTo(cx, cy - r); q.quadTo(cx + r * 0.7f, cy - r * 0.2f, cx + r * 0.45f, cy + r * 0.4f); q.quadTo(cx + r * 0.3f, cy + r * 0.85f, cx, cy + r);
+                q.quadTo(cx - r * 0.3f, cy + r * 0.85f, cx - r * 0.45f, cy + r * 0.4f); q.quadTo(cx - r * 0.7f, cy - r * 0.2f, cx, cy - r); q.close();
+                c.drawPath(q, p);
+                d.setStrokeWidth(r * 0.12f);
+                c.drawLine(cx - r * 0.1f, cy - r * 0.5f, cx + r * 0.15f, cy - r * 0.1f, d);
+                c.drawLine(cx + r * 0.15f, cy - r * 0.1f, cx - r * 0.05f, cy + r * 0.3f, d);
+                break;
+            }
+            case "rg": { // Гвардия Ворона: стремительное перо-клинок
+                q.moveTo(cx + r * 0.15f, cy - r); q.quadTo(cx - r * 0.5f, cy - r * 0.3f, cx - r * 0.75f, cy + r * 0.85f);
+                q.quadTo(cx - r * 0.1f, cy + r * 0.35f, cx + r * 0.35f, cy - r * 0.35f); q.close();
+                c.drawPath(q, p);
+                s.setStrokeWidth(r * 0.1f);
+                c.drawLine(cx + r * 0.1f, cy - r * 0.8f, cx - r * 0.55f, cy + r * 0.55f, s);
+                break;
+            }
+            case "al": { // Альфа Легион: две гидры-змея, обвивающиеся вокруг центра
+                for (int side = -1; side <= 1; side += 2) {
+                    Path h = new Path();
+                    h.moveTo(cx + side * r * 0.75f, cy - r * 0.7f);
+                    h.quadTo(cx - side * r * 0.2f, cy - r * 0.45f, cx + side * r * 0.3f, cy);
+                    h.quadTo(cx - side * r * 0.15f, cy + r * 0.45f, cx + side * r * 0.7f, cy + r * 0.7f);
+                    s.setStrokeWidth(r * 0.2f);
+                    c.drawPath(h, s);
+                    c.drawCircle(cx + side * r * 0.75f, cy - r * 0.7f, r * 0.16f, p);
+                }
+                break;
+            }
+            case "bs": // Чёрные Щиты: череп без оклада
+                Ui.drawSkull(c, cx, cy, r * 0.95f, color);
+                break;
+            case "sl": { // Расколотые Легионы: треснувший диск
+                c.drawCircle(cx, cy, r * 0.8f, s);
+                d.setStrokeWidth(r * 0.14f);
+                Path cr = new Path();
+                cr.moveTo(cx - r * 0.1f, cy - r * 0.8f); cr.lineTo(cx + r * 0.2f, cy - r * 0.3f); cr.lineTo(cx - r * 0.15f, cy + r * 0.1f); cr.lineTo(cx + r * 0.25f, cy + r * 0.75f);
+                c.drawPath(cr, d);
+                break;
+            }
+            case "sa": { // Солар Ауксилия: солнечный диск с лучами
+                c.drawCircle(cx, cy, r * 0.45f, p);
+                s.setStrokeWidth(r * 0.12f);
+                for (int i = 0; i < 12; i++) {
+                    double a = Math.PI * i / 6;
+                    c.drawLine(cx + (float) Math.cos(a) * r * 0.6f, cy + (float) Math.sin(a) * r * 0.6f, cx + (float) Math.cos(a) * r, cy + (float) Math.sin(a) * r, s);
+                }
+                break;
+            }
+            case "cust": { // Кустодес: копейный наконечник в нимбе
+                q.moveTo(cx, cy - r); q.lineTo(cx + r * 0.25f, cy - r * 0.55f); q.lineTo(cx + r * 0.08f, cy - r * 0.55f); q.lineTo(cx + r * 0.08f, cy + r * 0.9f); q.lineTo(cx - r * 0.08f, cy + r * 0.9f); q.lineTo(cx - r * 0.08f, cy - r * 0.55f); q.lineTo(cx - r * 0.25f, cy - r * 0.55f); q.close();
+                c.drawPath(q, p);
+                q.reset(); q.addArc(new RectF(cx - r * 0.55f, cy - r * 0.35f, cx + r * 0.55f, cy + r * 0.75f), 20, 140);
+                s.setStrokeWidth(r * 0.1f);
+                c.drawPath(q, s);
+                break;
+            }
+            case "mech": { // Механикум: шестерня с машинным оком
+                int teeth = 8;
+                for (int i = 0; i < teeth; i++) {
+                    double a = Math.PI * 2 * i / teeth;
+                    c.save();
+                    c.rotate((float) Math.toDegrees(a), cx, cy);
+                    c.drawRect(cx + r * 0.62f, cy - r * 0.1f, cx + r * 0.85f, cy + r * 0.1f, p);
+                    c.restore();
+                }
+                c.drawCircle(cx, cy, r * 0.6f, p);
+                d.setStrokeWidth(r * 0.12f);
+                c.drawCircle(cx, cy, r * 0.34f, d);
+                c.drawLine(cx - r * 0.34f, cy, cx + r * 0.34f, cy, d);
+                break;
+            }
+            case "skit": { // Скитарии: полушестерня с клинком
+                q.addArc(new RectF(cx - r * 0.75f, cy - r * 0.75f, cx + r * 0.75f, cy + r * 0.75f), 90, 180);
+                c.drawPath(q, s);
+                for (int i = 0; i < 4; i++) {
+                    double a = Math.PI * (0.15 + i * 0.23);
+                    c.drawLine(cx + (float) Math.cos(a) * r * 0.75f, cy - (float) Math.sin(a) * r * 0.75f, cx + (float) Math.cos(a) * r, cy - (float) Math.sin(a) * r, s);
+                }
+                q.reset(); q.moveTo(cx + r * 0.1f, cy - r * 0.9f); q.lineTo(cx + r * 0.4f, cy + r * 0.6f); q.lineTo(cx + r * 0.1f, cy + r * 0.85f); q.lineTo(cx - r * 0.2f, cy + r * 0.6f); q.close();
+                c.drawPath(q, p);
+                break;
+            }
+            case "tit": { // Легион Титаникус: голова богомашины
+                c.drawRect(cx - r * 0.55f, cy - r * 0.85f, cx + r * 0.55f, cy - r * 0.35f, p);
+                c.drawRoundRect(new RectF(cx - r * 0.75f, cy - r * 0.35f, cx + r * 0.75f, cy + r * 0.45f), r * 0.15f, r * 0.15f, p);
+                d.setStrokeWidth(r * 0.14f);
+                c.drawLine(cx - r * 0.45f, cy - r * 0.6f, cx - r * 0.05f, cy - r * 0.6f, d);
+                c.drawLine(cx + r * 0.05f, cy - r * 0.6f, cx + r * 0.45f, cy - r * 0.6f, d);
+                c.drawRect(cx - r * 0.25f, cy + r * 0.45f, cx + r * 0.25f, cy + r * 0.85f, p);
+                break;
+            }
+            case "qst": { // Квесторис: рыцарский шлем с глазной щелью
+                q.moveTo(cx - r * 0.7f, cy + r * 0.8f); q.lineTo(cx - r * 0.7f, cy - r * 0.3f); q.quadTo(cx, cy - r, cx + r * 0.7f, cy - r * 0.3f); q.lineTo(cx + r * 0.7f, cy + r * 0.8f); q.close();
+                c.drawPath(q, p);
+                d.setStrokeWidth(r * 0.13f);
+                c.drawLine(cx - r * 0.45f, cy - r * 0.05f, cx + r * 0.45f, cy - r * 0.05f, d);
+                c.drawLine(cx + r * 0.25f, cy - r * 0.05f, cx + r * 0.25f, cy + r * 0.4f, d);
+                break;
+            }
+            case "mil": { // Имперская милиция: скрещенные винтовка и лопата
+                s.setStrokeWidth(r * 0.16f);
+                c.drawLine(cx - r * 0.8f, cy - r * 0.8f, cx + r * 0.8f, cy + r * 0.8f, s);
+                s.setStrokeWidth(r * 0.1f);
+                c.drawLine(cx - r * 0.2f, cy - r * 0.85f, cx + r * 0.2f, cy + r * 0.55f, s);
+                q.addArc(new RectF(cx - r * 0.05f, cy + r * 0.5f, cx + r * 0.45f, cy + r), 90, 200);
+                c.drawPath(q, s);
+                c.drawCircle(cx - r * 0.8f, cy - r * 0.8f, r * 0.14f, p);
+                break;
+            }
+            case "dn": { // Демоны Варпа: рогатое пламя
+                q.moveTo(cx, cy - r * 0.35f); q.quadTo(cx + r * 0.7f, cy + r * 0.1f, cx + r * 0.45f, cy + r * 0.8f); q.quadTo(cx + r * 0.15f, cy + r * 0.6f, cx, cy + r);
+                q.quadTo(cx - r * 0.15f, cy + r * 0.6f, cx - r * 0.45f, cy + r * 0.8f); q.quadTo(cx - r * 0.7f, cy + r * 0.1f, cx, cy - r * 0.35f); q.close();
+                c.drawPath(q, p);
+                s.setStrokeWidth(r * 0.12f);
+                c.drawArc(new RectF(cx - r * 0.75f, cy - r, cx - r * 0.05f, cy - r * 0.25f), 90, 220, false, s);
+                c.drawArc(new RectF(cx + r * 0.05f, cy - r, cx + r * 0.75f, cy - r * 0.25f), -90, -220, false, s);
+                break;
+            }
+            case "as": // Ассасины: перекрестие прицела с клинком
+                c.drawCircle(cx, cy, r * 0.75f, s);
+                d.setStrokeWidth(r * 0.12f);
+                c.drawLine(cx, cy - r, cx, cy + r, d);
+                c.drawLine(cx - r, cy, cx + r, cy, d);
+                q.moveTo(cx, cy - r * 0.5f); q.lineTo(cx + r * 0.18f, cy); q.lineTo(cx, cy + r * 0.5f); q.lineTo(cx - r * 0.18f, cy); q.close();
+                c.drawPath(q, p);
+                break;
+            case "psy": { // Анафема Психана: звезда, перечёркнутая тишиной
+                draw(c, "star", cx, cy, r * 0.85f, color);
+                d.setStrokeWidth(r * 0.16f);
+                c.drawLine(cx - r, cy + r * 0.6f, cx + r, cy - r * 0.6f, d);
+                break;
+            }
+            case "ke": { // Странствующие Рыцари: восьмилучевая звезда-орден
+                draw(c, "star", cx, cy, r * 0.9f, color);
+                c.save();
+                c.rotate(36, cx, cy);
+                draw(c, "star", cx, cy, r * 0.9f, color);
+                c.restore();
+                break;
+            }
+            default:
+                draw(c, "shield", cx, cy, r, color);
+        }
+    }
+
     /** Символ по имени категории/слота. */
     static String forCategory(String name) {
         if (name == null) return "diamond";

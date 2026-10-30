@@ -71,3 +71,12 @@
 - Импорт/экспорт → `RosImport`, `RosExport`, `TextImport`.
 - Внешний вид, тема → `Ui.java`, `Cogitator.java`, `Theme.java`.
 - Обновления → `Updater.java`, `release.sh`, ветка `updates`.
+
+## Дополнения 2026-10-30
+- Озвучка сервочерепа: `Voice.saySkull` (TTS 1.5×, `voxSkull` — кольцевая модуляция без соборного эха); вызовы в `Guide.step`, шутки меню в `MenuScreen.build`, литания `Eggs.LITANY`, интро `ImproveScreen`.
+- Smart: потолок 2 доп. детачментов союзника (`allyPhase`, `auxCount`); штраф HQ в `value()` теперь ловит слот «HQ» (был мёртвый `startsWith("Command")`); объяснения про командиров союзника в `res.reasons`.
+- ImproveScreen: «Союзник врага» (`pickEnemyAlly`, pref `improve_enemy_ally`), выбор миссии (`improve_mission`), кнопка «Применить всё» (`applyAll`).
+- Время боя: `Battle.turnStarted` (+json), живые часы `BattleScreen.fmtDur` (секундный тик, общее + на ход).
+- Иконки фракций: `Theme.iconFor` (ключи da/ec/iw/…), `Glyph.drawFaction` (свои векторные знаки), `Ui.Hex` рисует иконку вместо «shield» и без symbol/label.
+- Варп-тема: `Eggs.startVeil/stopVeil` (щупальца, глаза, глитчи, шёпоты), звуки `Sfx`: `warp_drone` (петля `Sfx.loop`), `warp_whisper`, `warp_glitch`.
+- Сборка без SDK на этой машине: `tools/tools-build.sh` (build-tools r34 + android.jar + JDK17 в `tools/`; d8 вместо dx).
