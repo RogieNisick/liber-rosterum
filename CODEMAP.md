@@ -1,4 +1,4 @@
-# CODEMAP — Liber Rosterum 4.20 (versionCode 58)
+# CODEMAP — Liber Rosterum 4.22 (versionCode 60)
 
 Карта «где что лежит». Строки (`:N`) — якоря на момент версии 4.17, после правок слегка плывут: ищи через `grep -n "имя" -r src`. Крупные файлы целиком не читать.
 
@@ -7,7 +7,8 @@
 ## Сборка и релиз
 - `build.sh` — aapt2 → javac (android.jar из `$T/plat/android-34`) → dx → подпись apksigner → `build/LiberRosterum.apk`.
 - `release.sh` — обновляет `notes_history.json` из `release_notes.txt`, вызывает `build.sh`, пишет `build/version.json`. Версия берётся из `AndroidManifest.xml` (`versionCode`, `versionName`).
-- Ветка `main` — исходники; ветка `updates` — только `LiberRosterum.apk`, `version.json`, `README.md`.
+- На Windows (эта машина): сборка `bash tools/build-win.sh` (тулчейн в `tools/`, d8), релиз — `perl ../append_entry.pl` + `perl ../versionjson.pl` (скрипты в родителе репо). Подпись — `liber.keystore` в корне (pass `liberliber`, alias `liber`), SHA-256 `898cb04a…`; бэкап ключа — `D:\Liber Rosterum\liber.keystore.kimi-backup`. После сборки проверять: `jar tf build/LiberRosterum.apk | grep -c "\\\\"` = 0.
+- Ветка `main` — исходники; ветка `updates` — только `LiberRosterum.apk`, `version.json`, `README.md`. **На `updates` коммитить строго `git add LiberRosterum.apk version.json` — НИКОГДА `git add -A`** (там нет `.gitignore`, подтянется `tools/`, `build/`, кейстор).
 - `assets/`: `art/` (рамка `frame.png`, значки слотов `slot_*.png`, `b_*.png`, `f_*.png`, сервочереп, свечи), `fonts/`, `library/*.idx.gz` (поисковые индексы книг правил, 16 шт.), `phrases.txt`, `news_scroll.png`, `notes_history.json`.
 
 ## engine/ — правила и данные (без UI)
