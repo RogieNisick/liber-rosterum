@@ -1,4 +1,4 @@
-# CODEMAP — Liber Rosterum 4.17 (versionCode 54)
+# CODEMAP — Liber Rosterum 4.20 (versionCode 58)
 
 Карта «где что лежит». Строки (`:N`) — якоря на момент версии 4.17, после правок слегка плывут: ищи через `grep -n "имя" -r src`. Крупные файлы целиком не читать.
 
@@ -56,9 +56,9 @@
 | `ImageSearchScreen.java` / `AutoPhoto.java` / `PhotoProvider.java` | Фото юнитов: поиск картинок, автопоиск, запись снимка камерой. |
 
 ## Оформление, звук, прочее
-- `Ui.java` (1107) — тема «Cogitator»: `setDark:52`, `steel/steelButton:290`, `parchment:355`, `button:512`, `row/col:629`, `drawSkull:661`, `parchmentPage:754`. Вложенные `Steel`, `Parchment`, `Metal`, `Ribbon`, `T`, `Glow`, `Backdrop`.
+- `Ui.java` — тема «Cogitator»: `setDark:52`, `steel/steelButton:290`, `parchment:355`, `button:512`, `row/col:629`, `drawSkull:661`, `parchmentPage:754`. Вложенные `Steel`, `Parchment`, `Metal`, `Ribbon`, `T`, `Glow`, `Backdrop`, `ServoSkull` (варп-скверна по `Ui.warp`). Флаг `Ui.warp` ставится из `Eggs.applyChaos`.
 - `Cogitator.java` — рамка экрана, свечи, шлюз-переход. `Art.java` — картинки из `assets/art`. `Theme.java` — цвета фракций и шрифты. `Glyph.java` — нарисованные значки типов юнитов и миссий. `Units.java` — тип юнита для силуэта, русские названия слотов.
-- `Sfx.java` — синтезированные звуки и хаптика. `Voice.java` — глашатай (TTS + вокс-эффект). `Guide.java` — сервочереп-наставник. `Eggs.java` — пасхалки. `Shrine.java` — свечи и черепа на плашках.
+- `Sfx.java` — синтезированные звуки и хаптика. `Voice.java` — глашатай (TTS + вокс-эффект), `saySkull` — голос сервочерепа, `voxWarp` — варп-искажение (флаг `Voice.warp`, маркеры \u0001/\u0002 в pendingText). `Guide.java` — сервочереп-наставник, фразы из `assets/phrases.txt`, в варпе — `assets/phrases_warp.txt`. `Eggs.java` — пасхалки, варп-режим (`chaos` в prefs, `applyChaos`, долгое нажатие на эмблему или свайпы UUDD). `Shrine.java` — свечи и черепа на плашках.
 - `Translator.java` / `TrText.java` — перевод правил на русский с кешем.
 - `Store.java` — файлы данных BSData и сохранённые ростеры (`download:59`, `load:119`, `save:154`).
 - `Updater.java` — обновления «по воздуху» (Яндекс Диск / GitHub): `check:69`, `githubRepo:148`, `download:229`, `install:263`.
