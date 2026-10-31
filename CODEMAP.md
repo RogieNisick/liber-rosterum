@@ -1,4 +1,4 @@
-# CODEMAP — Liber Rosterum 4.22 (versionCode 60)
+# CODEMAP — Liber Rosterum 4.23 (versionCode 61)
 
 Карта «где что лежит». Строки (`:N`) — якоря на момент версии 4.17, после правок слегка плывут: ищи через `grep -n "имя" -r src`. Крупные файлы целиком не читать.
 

@@ -1,7 +1,9 @@
 package com.medoedy.liber;
 
 import android.graphics.Canvas;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.view.Gravity;
 import android.view.View;
@@ -105,7 +107,7 @@ final class BattleSetupScreen extends Screen {
         // ---------- развёртывание
         c.addView(a.ribbonTitle("РАЗВЁРТЫВАНИЕ", theme));
         if (chosen.map != null) {
-            if (chosen.mapId != null) c.addView(new MapView(a, chosen.mapId), Ui.lpm(-1, dp(185), 0, dp(4), 0, dp(2)));
+            if (chosen.mapId != null) c.addView(new MapView(a, chosen.mapId), Ui.lpm(-1, dp(216), 0, dp(4), 0, dp(2)));
             TextView mp = Ui.text(a, chosen.map, 13, Theme.body, Ui.BONE_DIM);
             mp.setPadding(dp(4), dp(2), 0, dp(4));
             c.addView(mp);
@@ -343,7 +345,7 @@ final class BattleSetupScreen extends Screen {
         @Override
         protected void onDraw(Canvas c) {
             float w = getWidth(), h = getHeight();
-            float tw = Math.min(w - dp(8), h * 1.5f - dp(4)), th = tw / 1.5f;
+            float tw = Math.min(w - dp(8), (h - dp(30)) * 1.5f), th = tw / 1.5f;
             L = (w - tw) / 2; T = (h - th) / 2; TW = tw; TH = th;
             p.setStyle(Paint.Style.FILL);
             p.setColor(0xFF3A3324);
@@ -395,171 +397,242 @@ final class BattleSetupScreen extends Screen {
             c.restore();
         }
 
+        /** Маркер цели в стиле книги: золотой круг с четырьмя стрелками наружу и числом ПО. */
         void marker(Canvas c, float x, float y, int v) {
+            float r = dp(7.2f), cx = X(x), cy = Y(y), a = dp(2.8f);
             p.setStyle(Paint.Style.FILL);
             p.setColor(0xFFE6C25A);
-            c.drawCircle(X(x), Y(y), dp(7), p);
+            c.drawCircle(cx, cy, r, p);
+            for (int i = 0; i < 4; i++) {
+                double an = i * Math.PI / 2;
+                float dx = (float) Math.sin(an), dy = (float) -Math.cos(an);
+                float bx = cx + dx * (r - dp(0.5f)), by = cy + dy * (r - dp(0.5f));
+                float tx = cx + dx * (r + a), ty = cy + dy * (r + a);
+                Path tri = new Path();
+                tri.moveTo(tx, ty);
+                tri.lineTo(bx + dy * a * 0.65f, by - dx * a * 0.65f);
+                tri.lineTo(bx - dy * a * 0.65f, by + dx * a * 0.65f);
+                tri.close();
+                c.drawPath(tri, p);
+            }
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(dp(1.1f));
+            p.setColor(0xFF2A2115);
+            c.drawCircle(cx, cy, r, p);
+            p.setStyle(Paint.Style.FILL);
+            label(c, String.valueOf(v), x, y + 1.9f, 0xFF2A2115, 9);
+        }
+
+        /** Позиция продвижения (◇): контурный круг с ромбом внутри. */
+        void markerNext(Canvas c, float x, float y) {
+            float cx = X(x), cy = Y(y), r = dp(5.6f), q = dp(2.7f);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(dp(1));
-            p.setColor(0xFF1A140C);
-            c.drawCircle(X(x), Y(y), dp(7), p);
+            p.setColor(0x9FE6C25A);
+            c.drawCircle(cx, cy, r, p);
+            Path d = new Path();
+            d.moveTo(cx, cy - q);
+            d.lineTo(cx + q, cy);
+            d.lineTo(cx, cy + q);
+            d.lineTo(cx - q, cy);
+            d.close();
+            c.drawPath(d, p);
             p.setStyle(Paint.Style.FILL);
-            label(c, String.valueOf(v), x, y + 1.9f, 0xFF1A140C, 9);
+        }
+
+        void zoneTri(Canvas c, float x1, float y1, float x2, float y2, float x3, float y3, int col) {
+            Path z = new Path();
+            z.moveTo(X(x1), Y(y1));
+            z.lineTo(X(x2), Y(y2));
+            z.lineTo(X(x3), Y(y3));
+            z.close();
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(col);
+            c.drawPath(z, p);
+            p.setStyle(Paint.Style.FILL);
+        }
+
+        void line(Canvas c, float x1, float y1, float x2, float y2, int col, float wdp) {
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(dp(wdp));
+            p.setColor(col);
+            c.drawLine(X(x1), Y(y1), X(x2), Y(y2), p);
+            p.setStyle(Paint.Style.FILL);
         }
 
         void grid(Canvas c) {
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(dp(0.7f));
-            p.setColor(0x55E6D9B8);
+            p.setColor(0x4DE6D9B8);
+            p.setPathEffect(new DashPathEffect(new float[]{dp(3), dp(3)}, 0));
             for (int i = 1; i < 4; i++) {
                 c.drawLine(X(i * 18), T, X(i * 18), T + TH, p);
                 c.drawLine(L, Y(i * 12), L + TW, Y(i * 12), p);
             }
+            p.setPathEffect(null);
             p.setStyle(Paint.Style.FILL);
         }
 
         void dimV(Canvas c, String s, float x, float y0, float y1) {
             p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(dp(1));
+            p.setStrokeWidth(dp(0.8f));
             p.setColor(TXT);
             c.drawLine(X(x), Y(y0), X(x), Y(y1), p);
-            c.drawLine(X(x) - dp(3), Y(y0), X(x) + dp(3), Y(y0), p);
-            c.drawLine(X(x) - dp(3), Y(y1), X(x) + dp(3), Y(y1), p);
+            c.drawLine(X(x) - dp(2.5f), Y(y0), X(x) + dp(2.5f), Y(y0), p);
+            c.drawLine(X(x) - dp(2.5f), Y(y1), X(x) + dp(2.5f), Y(y1), p);
             p.setStyle(Paint.Style.FILL);
             t9.setColor(TXT);
-            t9.setTextSize(dp(9));
+            t9.setTextSize(dp(8));
             t9.setTextAlign(Paint.Align.LEFT);
             t9.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            c.drawText(s, X(x) + dp(4), (Y(y0) + Y(y1)) / 2 + dp(3), t9);
+            c.drawText(s, X(x) + dp(3), (Y(y0) + Y(y1)) / 2 + dp(2.5f), t9);
         }
 
         void dimH(Canvas c, String s, float y, float x0, float x1) {
             p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(dp(1));
+            p.setStrokeWidth(dp(0.8f));
             p.setColor(TXT);
             c.drawLine(X(x0), Y(y), X(x1), Y(y), p);
-            c.drawLine(X(x0), Y(y) - dp(3), X(x0), Y(y) + dp(3), p);
-            c.drawLine(X(x1), Y(y) - dp(3), X(x1), Y(y) + dp(3), p);
+            c.drawLine(X(x0), Y(y) - dp(2.5f), X(x0), Y(y) + dp(2.5f), p);
+            c.drawLine(X(x1), Y(y) - dp(2.5f), X(x1), Y(y) + dp(2.5f), p);
             p.setStyle(Paint.Style.FILL);
-            label(c, s, (x0 + x1) / 2, y - 1.2f, TXT, 9);
-        }
-
-        /** Маленький золотой треугольник-стрелка (направление продвижения маркеров). */
-        void arrow(Canvas c, float x, float y, boolean up) {
-            android.graphics.Path tri = new android.graphics.Path();
-            float s = dp(4);
-            if (up) { tri.moveTo(X(x), Y(y) - s); tri.lineTo(X(x) - s, Y(y) + s * 0.5f); tri.lineTo(X(x) + s, Y(y) + s * 0.5f); }
-            else { tri.moveTo(X(x), Y(y) + s); tri.lineTo(X(x) - s, Y(y) - s * 0.5f); tri.lineTo(X(x) + s, Y(y) - s * 0.5f); }
-            tri.close();
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(0xFFE6C25A);
-            c.drawPath(tri, p);
+            label(c, s, (x0 + x1) / 2, y - 1.1f, TXT, 8);
         }
 
         void mission(Canvas c) {
             if (mid.equals("warofgods")) {
-                zone(c, 0, 0, 72, 12, ATK);
-                zone(c, 0, 36, 72, 48, DEF);
-                label(c, "Сторона A — зона развёртывания 72″×12″", 36, 7, TXT, 9);
-                label(c, "Сторона B — зона развёртывания 72″×12″", 36, 43, TXT, 9);
-                dimV(c, "12″", 70, 0, 12);
-                dimV(c, "12″", 70, 36, 48);
-                marker(c, 18, 24, 2);
+                // два треугольника в противоположных углах, маркеры — центральная колонна
+                zoneTri(c, 0, 0, 36, 0, 0, 48, DEF);
+                zoneTri(c, 72, 48, 36, 48, 72, 0, ATK);
+                line(c, 36, 0, 0, 48, TXT, 0.9f);
+                line(c, 36, 48, 72, 0, TXT, 0.9f);
+                label(c, "Зона стороны A", 12, 9, TXT, 9);
+                label(c, "Зона стороны B", 59, 40, TXT, 9);
+                marker(c, 36, 12, 2);
                 marker(c, 36, 24, 2);
-                marker(c, 54, 24, 2);
+                marker(c, 36, 36, 2);
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimH(c, "36″", 45.7f, 36, 72);
+                dimV(c, "12″", 40.5f, 12, 24);
+                dimV(c, "12″", 40.5f, 24, 36);
             } else if (mid.equals("giantkiller")) {
-                zone(c, 0, 0, 24, 48, ATK);
-                zone(c, 48, 0, 72, 48, DEF);
-                zone(c, 60, 0, 72, 48, 0xCC16305E);
-                label(c, "Атакующий", 12, 22, TXT, 10);
-                label(c, "зона 24″×48″", 12, 27, TXT, 9);
-                label(c, "Защитник", 54, 22, TXT, 10);
-                label(c, "зона 24″×48″", 54, 27, TXT, 9);
-                labelV(c, "Титаны — 12″", 66, 24, TXT, 9);
-                dimH(c, "24″", 3, 0, 24);
-                dimH(c, "24″", 3, 48, 72);
-                dimH(c, "12″", 45, 60, 72);
-                marker(c, 36, 24, 3);
-                marker(c, 36, 10, 2);
-                marker(c, 36, 38, 2);
+                // Защитник — 24″ у своего короткого края, маркеры 2·3·2 колонной в 18″
+                zone(c, 0, 0, 24, 48, DEF);
+                zone(c, 24, 0, 72, 48, 0x33B03A2A);
+                label(c, "Защитник", 8, 20.5f, TXT, 9);
+                label(c, "24″×48″", 8, 25.5f, TXT, 8.5f);
+                label(c, "Зона Атакующего", 48, 24, TXT, 9);
+                marker(c, 18, 12, 2);
+                marker(c, 18, 24, 3);
+                marker(c, 18, 36, 2);
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimH(c, "24″", 45.7f, 0, 24);
+                dimH(c, "24″", 45.7f, 24, 48);
+                dimH(c, "24″", 45.7f, 48, 72);
+                dimH(c, "18″", 28.2f, 0, 18);
+                dimV(c, "12″", 22.5f, 12, 24);
+                dimV(c, "12″", 22.5f, 24, 36);
             } else if (mid.equals("line")) {
                 grid(c);
-                zone(c, 0, 0, 72, 12, DEF);
+                label(c, "Край Защитника", 36, -1f, TXT, 8);
                 zone(c, 0, 36, 72, 48, ATK);
-                label(c, "Край Защитника · зона 72″×12″", 36, 7, TXT, 9);
-                label(c, "Край Атакующего · зона 72″×12″", 36, 43, TXT, 9);
-                dimV(c, "12″", 70, 0, 12);
-                dimV(c, "12″", 70, 36, 48);
+                label(c, "Зона Атакующего · 12″", 36, 43.8f, TXT, 8.5f);
                 for (int i = 0; i < 4; i++) {
                     marker(c, 9 + i * 18, 30, 1);
-                    arrow(c, 9 + i * 18, 25.5f, true);
+                    markerNext(c, 9 + i * 18, 18);
+                    markerNext(c, 9 + i * 18, 6);
                 }
-                label(c, "маркеры продвигаются к краю Защитника", 36, 17, 0xFFE6C25A, 8);
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimV(c, "12″", 66.5f, 36, 48);
+                dimH(c, "18″", 38.5f, 0, 18);
             } else if (mid.equals("breakthrough")) {
                 grid(c);
-                zone(c, 0, 0, 72, 12, DEF);
+                label(c, "Край Защитника", 36, -1f, TXT, 8);
                 zone(c, 0, 36, 72, 48, ATK);
-                label(c, "Край Защитника · зона 72″×12″", 36, 7, TXT, 9);
-                label(c, "Край Атакующего · зона 72″×12″", 36, 43, TXT, 9);
-                dimV(c, "12″", 70, 0, 12);
-                dimV(c, "12″", 70, 36, 48);
-                marker(c, 9, 18, 1);
-                marker(c, 63, 18, 1);
-                marker(c, 27, 30, 1);
-                marker(c, 45, 30, 1);
-                // резервы Защитника с коротких краёв
-                arrow(c, 4, 24, true);
-                arrow(c, 68, 24, true);
-                labelV(c, "резервы", 4, 30, 0xFFE6C25A, 8);
-                labelV(c, "резервы", 68, 30, 0xFFE6C25A, 8);
+                label(c, "Зона Атакующего · 12″", 36, 43.8f, TXT, 8.5f);
+                // начальные: фланги у зоны + центр на ряд выше; остальное — позиции продвижения
+                marker(c, 9, 30, 1);
+                marker(c, 63, 30, 1);
+                marker(c, 27, 18, 1);
+                marker(c, 45, 18, 1);
+                markerNext(c, 9, 18);
+                markerNext(c, 63, 18);
+                markerNext(c, 9, 6);
+                markerNext(c, 27, 6);
+                markerNext(c, 45, 6);
+                markerNext(c, 63, 6);
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimV(c, "12″", 66.5f, 36, 48);
+                dimH(c, "18″", 38.5f, 0, 18);
             } else if (mid.equals("dawn")) {
                 grid(c);
-                zone(c, 0, 0, 36, 24, DEF);
-                zone(c, 36, 24, 72, 48, ATK);
-                label(c, "Защитник", 18, 10, TXT, 10);
-                label(c, "зона 36″×24″", 18, 15, TXT, 9);
-                label(c, "Атакующий", 54, 34, TXT, 10);
-                label(c, "зона 36″×24″", 54, 39, TXT, 9);
-                dimH(c, "36″", 2.5f, 0, 36);
-                dimH(c, "36″", 45.5f, 36, 72);
-                dimV(c, "24″", 2, 0, 24);
-                dimV(c, "24″", 70, 24, 48);
-                marker(c, 9, 6, 1);
-                marker(c, 27, 18, 1);
-                marker(c, 45, 30, 1);
-                marker(c, 63, 42, 1);
+                label(c, "Край Защитника", 36, -1f, TXT, 8);
+                // зона Атакующего — треугольник у его края: от середины бокового края к дальнему углу
+                zoneTri(c, 0, 48, 72, 48, 0, 24, ATK);
+                line(c, 0, 24, 72, 48, TXT, 0.9f);
+                label(c, "Зона Атакующего", 26, 42.5f, TXT, 9);
+                for (int i = 0; i < 4; i++) {
+                    marker(c, 9 + i * 18, 18, 1);
+                    markerNext(c, 9 + i * 18, 6);
+                }
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimH(c, "18″", 44.5f, 0, 18);
+                dimV(c, "12″", 3, 36, 48);
             } else if (mid.equals("ignis")) {
+                // зоны по 12″ у краёв, два треугольных сектора Spearhead с вершинами в центре
                 zone(c, 0, 0, 72, 12, DEF);
                 zone(c, 0, 36, 72, 48, ATK);
-                zone(c, 8, 36, 24, 48, 0x55E6C25A);
-                zone(c, 48, 36, 64, 48, 0x55E6C25A);
-                label(c, "Край Защитника · укрепления · зона 12″", 36, 7, TXT, 9);
-                label(c, "Край Атакующего · зона 12″", 36, 41, TXT, 9);
-                label(c, "Spearhead", 16, 46, 0xFF1A140C, 8);
-                label(c, "Spearhead", 56, 46, 0xFF1A140C, 8);
-                dimV(c, "12″", 70, 0, 12);
-                dimV(c, "12″", 70, 36, 48);
+                zoneTri(c, 0, 12, 0, 36, 36, 24, 0x66E6C25A);
+                zoneTri(c, 72, 12, 72, 36, 36, 24, 0x66E6C25A);
+                line(c, 0, 12, 36, 24, TXT, 0.9f);
+                line(c, 0, 36, 36, 24, TXT, 0.9f);
+                line(c, 72, 12, 36, 24, TXT, 0.9f);
+                line(c, 72, 36, 36, 24, TXT, 0.9f);
+                label(c, "Зона Защитника · 12″", 36, 6.5f, TXT, 8.5f);
+                label(c, "Spearhead", 13.5f, 25, TXT, 8);
+                label(c, "Spearhead", 58.5f, 25, TXT, 8);
+                label(c, "Зона Атакующего · 12″", 36, 43.5f, TXT, 8.5f);
+                marker(c, 18, 18, 2);
+                marker(c, 54, 18, 2);
                 marker(c, 36, 24, 3);
-                marker(c, 20, 15, 2);
-                marker(c, 52, 15, 2);
+                dimV(c, "48″", 69.5f, 0, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimV(c, "12″", 4, 0, 12);
+                dimV(c, "12″", 4, 36, 48);
+                dimV(c, "18″", 18, 0, 18);
+                dimV(c, "24″", 36, 0, 24);
+                dimV(c, "18″", 54, 0, 18);
+                dimH(c, "18″", 21.5f, 0, 18);
             } else if (mid.equals("firstwave")) {
-                zone(c, 0, 0, 72, 12, DEF);
-                zone(c, 0, 36, 48, 48, ATK);
-                zone(c, 48, 36, 72, 48, 0xCC7A2A20);
-                p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(dp(1));
-                p.setColor(TXT);
-                c.drawLine(X(48), Y(36), X(48), Y(48), p);
-                p.setStyle(Paint.Style.FILL);
-                label(c, "Зона Защитника 72″×12″", 36, 7, TXT, 9);
-                label(c, "Зона 1 — пехота", 24, 43, TXT, 9);
-                label(c, "Зона 2 — техника", 60, 43, TXT, 9);
-                dimV(c, "12″", 70, 0, 12);
-                dimV(c, "12″", 2, 36, 48);
-                marker(c, 18, 13, 2);
-                marker(c, 36, 10, 2);
-                marker(c, 54, 13, 2);
-                marker(c, 36, 21, 2);
+                // Защитник 10″ сверху, у Атакующего две зоны по 10″, маркеры-плацдармы 2·2·2·2
+                zone(c, 0, 0, 72, 10, DEF);
+                zone(c, 0, 28, 72, 38, ATK);
+                zone(c, 0, 38, 72, 48, 0xCC7A2A20);
+                line(c, 0, 38, 72, 38, TXT, 0.9f);
+                label(c, "Зона Защитника · 10″", 36, 6, TXT, 8.5f);
+                label(c, "Зона Атакующего 1 — пехота · 10″", 36, 33.2f, TXT, 8);
+                label(c, "Зона Атакующего 2 — техника · 10″", 36, 43.2f, TXT, 8);
+                marker(c, 12, 20, 2);
+                marker(c, 24, 16, 2);
+                marker(c, 48, 16, 2);
+                marker(c, 60, 20, 2);
+                dimV(c, "10″", 69, 0, 10);
+                dimV(c, "10″", 69, 28, 38);
+                dimV(c, "10″", 69, 38, 48);
+                dimH(c, "72″", 50.8f, 0, 72);
+                dimH(c, "12″", 22.5f, 0, 12);
+                dimH(c, "12″", 22.5f, 12, 24);
+                dimH(c, "12″", 22.5f, 48, 60);
+                dimH(c, "12″", 22.5f, 60, 72);
+                dimV(c, "10″", 9, 10, 20);
+                dimV(c, "6″", 26.5f, 10, 16);
+                dimV(c, "6″", 44.5f, 10, 16);
+                dimV(c, "10″", 61.5f, 10, 20);
             }
         }
     }
