@@ -420,7 +420,12 @@ final class BattleSetupScreen extends Screen {
             p.setColor(0xFF2A2115);
             c.drawCircle(cx, cy, r, p);
             p.setStyle(Paint.Style.FILL);
-            label(c, String.valueOf(v), x, y + 1.9f, 0xFF2A2115, 9);
+            // число по центру круга: базовая линия смещается на половину высоты глифов
+            t9.setColor(0xFF2A2115);
+            t9.setTextSize(dp(9));
+            t9.setTextAlign(Paint.Align.CENTER);
+            t9.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            c.drawText(String.valueOf(v), cx, cy - (t9.ascent() + t9.descent()) / 2, t9);
         }
 
         /** Позиция продвижения (◇): контурный круг с ромбом внутри. */
@@ -571,32 +576,37 @@ final class BattleSetupScreen extends Screen {
             } else if (mid.equals("dawn")) {
                 grid(c);
                 label(c, "Край Защитника", 36, -1f, TXT, 8);
-                // зона Атакующего — треугольник у его края: от середины бокового края к дальнему углу
+                // зоны — зеркальные треугольники: диагонали от середины бокового края (24″) к дальнему углу
+                zoneTri(c, 0, 0, 72, 0, 72, 24, DEF);
+                line(c, 0, 0, 72, 24, TXT, 0.9f);
                 zoneTri(c, 0, 48, 72, 48, 0, 24, ATK);
                 line(c, 0, 24, 72, 48, TXT, 0.9f);
-                label(c, "Зона Атакующего", 26, 42.5f, TXT, 9);
+                label(c, "Зона Защитника", 46, 3.2f, TXT, 8);
+                label(c, "Зона Атакующего", 31, 45.5f, TXT, 9);
                 for (int i = 0; i < 4; i++) {
                     marker(c, 9 + i * 18, 18, 1);
                     markerNext(c, 9 + i * 18, 6);
                 }
                 dimV(c, "48″", 69.5f, 0, 48);
                 dimH(c, "72″", 50.8f, 0, 72);
-                dimH(c, "18″", 44.5f, 0, 18);
-                dimV(c, "12″", 3, 36, 48);
+                dimH(c, "18″", 40, 0, 18);
+                dimV(c, "12″", 18, 36, 48);
             } else if (mid.equals("ignis")) {
-                // зоны по 12″ у краёв, два треугольных сектора Spearhead с вершинами в центре
+                // зоны по 12″ у краёв, два сектора Spearhead — треугольники на зоне Атакующего
+                // (основания 0–36″ и 36–72″, вершины на 24″ под маркерами 2 ПО)
                 zone(c, 0, 0, 72, 12, DEF);
                 zone(c, 0, 36, 72, 48, ATK);
-                zoneTri(c, 0, 12, 0, 36, 36, 24, 0x66E6C25A);
-                zoneTri(c, 72, 12, 72, 36, 36, 24, 0x66E6C25A);
-                line(c, 0, 12, 36, 24, TXT, 0.9f);
-                line(c, 0, 36, 36, 24, TXT, 0.9f);
-                line(c, 72, 12, 36, 24, TXT, 0.9f);
-                line(c, 72, 36, 36, 24, TXT, 0.9f);
+                zoneTri(c, 0, 36, 36, 36, 18, 24, 0x66E6C25A);
+                zoneTri(c, 36, 36, 72, 36, 54, 24, 0x66E6C25A);
+                line(c, 0, 36, 18, 24, TXT, 0.9f);
+                line(c, 18, 24, 36, 36, TXT, 0.9f);
+                line(c, 36, 36, 54, 24, TXT, 0.9f);
+                line(c, 54, 24, 72, 36, TXT, 0.9f);
+                line(c, 0, 36, 72, 36, TXT, 0.9f);
                 label(c, "Зона Защитника · 12″", 36, 6.5f, TXT, 8.5f);
-                label(c, "Spearhead", 13.5f, 25, TXT, 8);
-                label(c, "Spearhead", 58.5f, 25, TXT, 8);
-                label(c, "Зона Атакующего · 12″", 36, 43.5f, TXT, 8.5f);
+                label(c, "Spearhead", 18, 33.5f, TXT, 7.5f);
+                label(c, "Spearhead", 54, 33.5f, TXT, 7.5f);
+                label(c, "Зона Атакующего · 12″", 54, 43.5f, TXT, 8.5f);
                 marker(c, 18, 18, 2);
                 marker(c, 54, 18, 2);
                 marker(c, 36, 24, 3);
@@ -607,7 +617,8 @@ final class BattleSetupScreen extends Screen {
                 dimV(c, "18″", 18, 0, 18);
                 dimV(c, "24″", 36, 0, 24);
                 dimV(c, "18″", 54, 0, 18);
-                dimH(c, "18″", 21.5f, 0, 18);
+                dimV(c, "24″", 36, 24, 48);
+                dimH(c, "18″", 24, 0, 18);
             } else if (mid.equals("firstwave")) {
                 // Защитник 10″ сверху, у Атакующего две зоны по 10″, маркеры-плацдармы 2·2·2·2
                 zone(c, 0, 0, 72, 10, DEF);

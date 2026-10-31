@@ -68,30 +68,56 @@ final class Voice {
         });
     }
 
-    /** Выставить язык синтеза по настройке «ru» и подобрать мужской голос. */
+    /** Голоса подбираются один раз: английский — как в 4.17 (только для глашатая),
+     *  русский — для русского глашатая и всегда для сервочерепа. */
+    private static android.speech.tts.Voice enVoice, ruVoice;
+    private static boolean enOk, ruOk, curRu, curSet;
+
+    /** Подобрать оба голоса и выставить язык по настройке «ru». */
     static void setLang() {
         if (tts == null) return;
-        int r;
-        if (ru) {
-            r = tts.setLanguage(new Locale("ru", "RU"));
-            status = r < 0 ? "Русский голос не установлен — добавьте русский синтез речи в «Google Синтез речи»." : "Глашатай готов";
-        } else {
-            r = tts.setLanguage(Locale.UK);
+        if (enVoice == null && !enOk) {
+            int r = tts.setLanguage(Locale.UK);
             if (r < 0) r = tts.setLanguage(Locale.US);
             if (r < 0) r = tts.setLanguage(Locale.ENGLISH);
-            status = r < 0 ? "Английский голос не установлен — говорит голос по умолчанию." : "Глашатай готов";
+            enOk = r >= 0;
+            enVoice = pickMale(false);
         }
-        pickMale();
+        if (ruVoice == null && !ruOk) {
+            ruOk = tts.setLanguage(new Locale("ru", "RU")) >= 0;
+            ruVoice = pickMale(true);
+        }
+        curSet = false;
+        use(ru);
+        android.speech.tts.Voice v = ru ? ruVoice : enVoice;
+        if (v != null) { voiceName = v.getName(); status = "Глашатай готов: " + voiceName; }
+        else if (ru) status = ruOk ? "Мужской русский голос не найден — в «Google Синтез речи» скачайте русский голос."
+                                   : "Русский голос не установлен — добавьте русский синтез речи в «Google Синтез речи».";
+        else status = enOk ? "Мужской голос не найден — в «Google Синтез речи» скачайте английский голос (Великобритания)."
+                           : "Английский голос не установлен — говорит голос по умолчанию.";
+    }
+
+    /** Переключить движок на русский или английский голос перед синтезом. */
+    private static void use(boolean wantRu) {
+        if (curSet && curRu == wantRu) return;
+        curSet = true;
+        curRu = wantRu;
+        try {
+            android.speech.tts.Voice v = wantRu ? ruVoice : enVoice;
+            if (v != null) tts.setVoice(v);
+            else if (wantRu) tts.setLanguage(new Locale("ru", "RU"));
+            else if (tts.setLanguage(Locale.UK) < 0 && tts.setLanguage(Locale.US) < 0) tts.setLanguage(Locale.ENGLISH);
+        } catch (Throwable ignored) { }
     }
 
     /** Текст для глашатая: русский или английский в зависимости от настройки. */
     static String line(String russian, String english) { return ru ? russian : english; }
 
     /** Выбрать мужской голос нужного языка. */
-    private static void pickMale() {
+    private static android.speech.tts.Voice pickMale(boolean ru) {
         try {
             Set<android.speech.tts.Voice> vs = tts.getVoices();
-            if (vs == null) return;
+            if (vs == null) return null;
             String lang = ru ? "ru" : "en";
             android.speech.tts.Voice best = null;
             int bestScore = -1;
@@ -108,10 +134,8 @@ final class Voice {
                 if (v.getFeatures() != null && v.getFeatures().contains("notInstalled")) sc -= 50;
                 if (sc > bestScore) { bestScore = sc; best = v; }
             }
-            if (best != null) { tts.setVoice(best); voiceName = best.getName(); status = "Глашатай готов: " + voiceName; }
-            else status = ru ? "Мужской русский голос не найден — в «Google Синтез речи» скачайте русский голос."
-                             : "Мужской голос не найден — в «Google Синтез речи» скачайте английский голос (Великобритания).";
-        } catch (Throwable ignored) { }
+            return best;
+        } catch (Throwable ignored) { return null; }
     }
 
     static void say(String text) { speak(text, false); }
@@ -130,6 +154,7 @@ final class Voice {
         final String id = (skull ? "s" : "v") + (++seq) + "_" + Integer.toHexString(text.hashCode());
         File f = new File(cacheDir, id + ".wav");
         try {
+            use(skull || ru);
             if (skull) {
                 if (warp) { tts.setSpeechRate(1.15f); tts.setPitch(0.68f); }
                 else { tts.setSpeechRate(1.5f); tts.setPitch(1.06f); }
